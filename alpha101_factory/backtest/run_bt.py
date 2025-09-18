@@ -4,6 +4,9 @@
 本模块提供对指定因子进行横截面 IC/RankIC 分析、分位数组合回测，
 并将结果保存为图表和 CSV 文件。
 """
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 import argparse
 import numpy as np
@@ -11,10 +14,10 @@ import pandas as pd
 from loguru import logger
 import plotly.express as px
 
-from ..config import PARQ_DIR_FACT, PARQ_DIR_KLINES, IMG_BT_DIR
-from ..utils.io import read_parquet
-from ..viz.plots import save_fig
-from .metrics import ic_rankic, quantile_portfolios
+from alpha101_factory.config import PARQ_DIR_FACT, PARQ_DIR_KLINES, IMG_BT_DIR, START_DATE, END_DATE, ADJUST
+from alpha101_factory.utils.io import read_parquet
+from alpha101_factory.viz.plots import save_fig
+from alpha101_factory.backtest.metrics import ic_rankic, quantile_portfolios
 
 
 def _load_prices(symbols: list[str]) -> pd.DataFrame:
@@ -29,7 +32,7 @@ def _load_prices(symbols: list[str]) -> pd.DataFrame:
     dfs: list[pd.DataFrame] = []
     for sym in symbols:
         try:
-            df = read_parquet(PARQ_DIR_KLINES / f"{sym}.parquet")
+            df = read_parquet(PARQ_DIR_KLINES / f"{sym}_{START_DATE}_{END_DATE}_{ADJUST}.parquet") if START_DATE and END_DATE else read_parquet(PARQ_DIR_KLINES / f"{sym}.parquet")
             if not df.empty:
                 dfs.append(df[["datetime", "symbol", "close"]])
         except Exception as e:

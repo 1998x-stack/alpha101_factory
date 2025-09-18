@@ -63,6 +63,7 @@ def fetch_kline_bs(
                       若无数据则返回空 DataFrame。
     """
     try:
+        symbol = ''.join(filter(str.isdigit, symbol))  # 移除非数字字符
         lg = bs.login()
         if lg.error_code != "0":
             logger.warning(f"Baostock 登录失败: {lg.error_msg}")

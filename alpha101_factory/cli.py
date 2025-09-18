@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
-import argparse
+import sys
+from pathlib import Path
 from loguru import logger
-from .utils.log import setup_logger
-from .data.loader import (fetch_spot, fetch_klines_from_spot,
+
+# 确保项目根目录加入 sys.path，便于模块导入
+try:
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+except Exception as e:
+    print(f"[警告] 无法设置 sys.path: {e}")
+
+import argparse
+from alpha101_factory.utils.log import setup_logger
+from alpha101_factory.data.loader import (fetch_spot, fetch_klines_from_spot,
                           check_klines_integrity, load_or_fetch_symbol)
-from .data.universe import load_universe
-from .factors.tmp_features import build_tmp_all
-from .pipeline.compute_factor import compute_and_save
-from .factors.registry import list_factors
-from .config import ADJUST
+from alpha101_factory.data.universe import load_universe
+from alpha101_factory.factors.tmp_features import build_tmp_all
+from alpha101_factory.pipeline.compute_factor import compute_and_save
+from alpha101_factory.factors.registry import list_factors
+from alpha101_factory.config import ADJUST
 
 def cmd_fetch(args):
     spot = fetch_spot(save=True)

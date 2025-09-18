@@ -22,7 +22,6 @@
 ├── factors                  # 因子体系
 │   ├── __init__.py          # 自动发现与导入因子模块（触发注册）
 │   ├── alphas_basic.py      # 基础一批可实现的 Alpha *
-│   ├── alphas_more.py       # 拓展一批可实现的 Alpha *
 │   ├── base.py              # Factor 抽象类与输出约定
 │   ├── registry.py          # @register 装饰器 + 自动发现 + 列表/检索
 │   └── tmp_features.py      # 中间变量构建：returns/vwap/adv 等并落盘

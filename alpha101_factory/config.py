@@ -21,8 +21,8 @@ for p in [PARQ_DIR_SPOT, PARQ_DIR_KLINES, PARQ_DIR_TMP, PARQ_DIR_FACT,
 
 # AkShare K 线参数
 ADJUST = os.getenv("ALPHA101_ADJUST", "qfq")   # "qfq" | "hfq" | ""
-START_DATE = os.getenv("ALPHA101_START", "")   # "YYYYMMDD" 或空
-END_DATE   = os.getenv("ALPHA101_END", "")     # "YYYYMMDD" 或空
+START_DATE = os.getenv("ALPHA101_START", "20200101")   # "YYYYMMDD" 或空
+END_DATE   = os.getenv("ALPHA101_END", "20250917")     # "YYYYMMDD" 或空
 
 # 并发 / 速率
 MAX_WORKERS = int(os.getenv("ALPHA101_MAX_WORKERS", "1"))
