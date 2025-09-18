@@ -189,6 +189,10 @@ def save_fig(fig, path: Path) -> Path:
     Returns:
         Path: 实际保存的文件路径。
     """
+    if path.exists():
+        logger.info(f"文件已存在，无需保存: {path}")
+        return path
+    
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.write_image(str(path))  # 依赖 `kaleido`
