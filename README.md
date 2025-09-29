@@ -1,7 +1,7 @@
 # 项目总览：alpha101_factory
 
 这是一个**可插拔（pluggable）Alpha 因子工厂**，围绕 A 股日线数据构建：
-**数据抓取（AkShare→BaoStock 兜底） → 特征缓存（tmp features） → 因子计算（Alpha101 & 更多） → 评价回测（IC/RankIC、分位组合） → 可视化与产物落盘（Parquet/PNG/CSV）**。
+**数据抓取（AkShare→Baostock 兜底） → 特征缓存（tmp features） → 因子计算（Alpha101 & 更多） → 评价回测（IC/RankIC、分位组合） → 可视化与产物落盘（Parquet/PNG/CSV）**。
 核心目标：让新人“拿来即用”，也能“随插随扩”。
 
 ---
@@ -16,7 +16,7 @@
 ├── cli.py                   # 顶层命令行：fetch / fetch-one / tmp / factor / check
 ├── config.py                # 目录/环境变量/采样/速率限制/图像路径
 ├── data                     # 数据获取与装载
-│   ├── baostock_api.py      # BaoStock 封装（akshare 失败时兜底）
+│   ├── baostock_api.py      # Baostock 封装（akshare 失败时兜底）
 │   ├── loader.py            # 抓取Spot/K线、校验、读取本地或下载、保存K线图片
 │   └── universe.py          # 股票池定义（可按需改造）
 ├── factors                  # 因子体系
@@ -45,7 +45,7 @@
 
    * `data/loader.py`
 
-     * 优先用 **AkShare** 获取；失败自动改用 **BaoStock**。
+     * 优先用 **AkShare** 获取；失败自动改用 **Baostock**。
      * 生成：
 
        * `data/spot/a_spot.parquet`（行情快照）
@@ -102,7 +102,7 @@
 * `REQUEST_PAUSE`：抓取节流
 * 图片目录：`images/klines`、`images/backtest`
 
-### B. 数据获取（AkShare→BaoStock 兜底）
+### B. 数据获取（AkShare→Baostock 兜底）
 
 * `loader._fetch_kline_fallback()`：先 akshare，异常/空数据 → `baostock_api.fetch_kline_bs()`
 * 读取本地 Parquet 时支持**日期裁剪**；无本地即下载。
@@ -206,7 +206,7 @@ python -m alpha101_factory.backtest.run_bt --alpha Alpha101 --horizon 1 --quanti
 * **K 线横轴是 1.6e18？**
   已在 `viz/plots.py` 强制把任何输入类型转为 `datetime` 并设置 `xaxis.type='date'`，PNG 正常显示 `%Y-%m-%d` 且 -45°。
 * **AkShare 拉不下来？**
-  自动切 BaoStock；也可手动只跑 `fetch-one` 做单票验证。
+  自动切 Baostock；也可手动只跑 `fetch-one` 做单票验证。
 
 ---
 
