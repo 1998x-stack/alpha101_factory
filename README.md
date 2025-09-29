@@ -1,5 +1,7 @@
 # 项目总览：alpha101_factory
 
+> 📘 Looking for English documentation? See [README_EN.md](README_EN.md).
+
 这是一个**可插拔（pluggable）Alpha 因子工厂**，围绕 A 股日线数据构建：
 **数据抓取（AkShare→Baostock 兜底） → 特征缓存（tmp features） → 因子计算（Alpha101 & 更多） → 评价回测（IC/RankIC、分位组合） → 可视化与产物落盘（Parquet/PNG/CSV）**。
 核心目标：让新人“拿来即用”，也能“随插随扩”。

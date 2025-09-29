@@ -53,6 +53,8 @@ def _coerce_datetime(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _select_symbol(df: pd.DataFrame, preferred: Optional[str]) -> Optional[str]:
+    """根据优先级选择用于时间序列展示的股票代码。"""
+
     if df.empty:
         return None
     symbols = sorted(df["symbol"].dropna().unique())
@@ -72,7 +74,12 @@ def _select_symbol(df: pd.DataFrame, preferred: Optional[str]) -> Optional[str]:
 def _select_heatmap_symbols(
     df: pd.DataFrame, heatmap_symbols: Optional[Sequence[str]], max_count: int
 ) -> List[str]:
+    """挑选热力图需要展示的股票列表。"""
+
     if df.empty:
+        return []
+
+    if max_count <= 0:
         return []
 
     all_counts = df["symbol"].value_counts()
@@ -107,7 +114,17 @@ def generate_factor_visuals(
     heatmap_top: int = 12,
     save: bool = True,
 ) -> FactorVisualArtifacts:
-    """为单个因子生成可视化。"""
+    """为单个因子生成可视化。
+
+    Args:
+        factor_name: 因子名称（对应 parquet 文件名）。
+        frame: 直接传入的 DataFrame，主要用于测试；缺省时会从磁盘读取。
+        ts_symbol: 优先展示的时间序列股票代码，缺失时自动回退。
+        heatmap_symbols: 指定热力图股票列表；为空则按覆盖度挑选。
+        cross_section_dt: 指定截面日期；为空则取最新交易日。
+        heatmap_top: 限制热力图自动挑选的股票数量。
+        save: 为 ``True`` 时写入 PNG 文件，为 ``False`` 时直接返回 plotly 对象。
+    """
 
     if frame is None:
         try:
@@ -130,7 +147,9 @@ def generate_factor_visuals(
     if dt is None:
         dt = pd.to_datetime(df["datetime"]).max()
 
-    heatmap_list = _select_heatmap_symbols(df, heatmap_symbols, heatmap_top)
+    # ``heatmap_top`` 允许外部通过参数控制热力图展示股票数量，负值视为不生成热力图。
+    heatmap_limit = max(int(heatmap_top or 0), 0)
+    heatmap_list = _select_heatmap_symbols(df, heatmap_symbols, heatmap_limit)
 
     outputs: MutableMapping[str, Path | object] = {}
 
@@ -178,7 +197,17 @@ def generate_all_factor_visuals(
     limit: Optional[int] = None,
     save: bool = True,
 ) -> Mapping[str, FactorVisualArtifacts]:
-    """批量渲染多个因子的可视化。"""
+    """批量渲染多个因子的可视化。
+
+    Args:
+        factors: 指定因子名称列表；为空时会按 ``prefix`` 扫描本地文件。
+        prefix: 自动发现因子文件时的前缀过滤条件。
+        ts_symbol: 传递给 ``generate_factor_visuals`` 的首选时间序列股票。
+        heatmap_symbols: 热力图股票名单，优先于自动挑选。
+        heatmap_top: 自动挑选热力图股票的数量上限。
+        limit: 当批量渲染过多时，可设置上限只处理前 ``limit`` 个文件。
+        save: 是否将输出落盘；与单因子函数保持一致。
+    """
 
     if factors is None or not factors:
         factors = _discover_factor_names(prefix)
