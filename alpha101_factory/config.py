@@ -14,9 +14,25 @@ LOG_DIR         = DATA_ROOT / "logs"
 IMG_DIR         = DATA_ROOT / "images"
 IMG_KLINES_DIR  = IMG_DIR / "klines"
 IMG_BT_DIR      = IMG_DIR / "backtest"
+IMG_FACTORS_DIR = IMG_DIR / "factors"
+IMG_FACTORS_TS_DIR = IMG_FACTORS_DIR / "timeseries"
+IMG_FACTORS_CS_DIR = IMG_FACTORS_DIR / "cross_section"
+IMG_FACTORS_HEATMAP_DIR = IMG_FACTORS_DIR / "heatmap"
 
-for p in [PARQ_DIR_SPOT, PARQ_DIR_KLINES, PARQ_DIR_TMP, PARQ_DIR_FACT,
-          LOG_DIR, IMG_DIR, IMG_KLINES_DIR, IMG_BT_DIR]:
+for p in [
+    PARQ_DIR_SPOT,
+    PARQ_DIR_KLINES,
+    PARQ_DIR_TMP,
+    PARQ_DIR_FACT,
+    LOG_DIR,
+    IMG_DIR,
+    IMG_KLINES_DIR,
+    IMG_BT_DIR,
+    IMG_FACTORS_DIR,
+    IMG_FACTORS_TS_DIR,
+    IMG_FACTORS_CS_DIR,
+    IMG_FACTORS_HEATMAP_DIR,
+]:
     p.mkdir(parents=True, exist_ok=True)
 
 # AkShare K 线参数

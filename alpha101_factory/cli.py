@@ -18,6 +18,7 @@ from alpha101_factory.factors.tmp_features import build_tmp_all
 from alpha101_factory.pipeline.compute_factor import compute_and_save
 from alpha101_factory.factors.registry import list_factors
 from alpha101_factory.config import ADJUST
+from alpha101_factory.viz.factor_summary import generate_all_factor_visuals
 
 def cmd_fetch(args):
     spot = fetch_spot(save=True)
@@ -51,6 +52,38 @@ def cmd_factor(args):
         symbols = [args.stock]
     for n in names:
         compute_and_save(n, symbols=symbols)
+
+
+def cmd_visualize(args):
+    if args.all:
+        factors = None
+    else:
+        factors = args.factors
+
+    if factors is not None and not factors:
+        logger.warning("未提供任何因子名称，使用 --all 可对全部因子绘图。")
+        return
+
+    ts_symbol = args.ts_symbol or None
+    heatmap_symbols = args.heatmap_symbols or None
+    if heatmap_symbols:
+        heatmap_symbols = [s.strip() for s in heatmap_symbols if s.strip()]
+
+    result = generate_all_factor_visuals(
+        factors=factors,
+        prefix=args.prefix,
+        ts_symbol=ts_symbol,
+        heatmap_symbols=heatmap_symbols,
+        heatmap_top=args.heatmap_top,
+        limit=args.limit if args.limit > 0 else None,
+        save=not args.dry_run,
+    )
+
+    if not result:
+        logger.warning("未生成任何因子图像，请确认因子结果是否存在。")
+    else:
+        logger.info(f"完成 {len(result)} 个因子的可视化生成。")
+
 
 def cmd_check(args):
     rpt = check_klines_integrity()
@@ -87,6 +120,22 @@ def main():
 
     p4 = sub.add_parser("check", help="check saved parquet for stock data")
     p4.set_defaults(func=cmd_check)
+
+    p5 = sub.add_parser("visualize", help="generate factor visualizations")
+    p5.add_argument("--all", action="store_true", help="visualize all factors (default prefix Alpha)")
+    p5.add_argument("--factors", nargs="*", default=[], help="specific factor names to visualize")
+    p5.add_argument("--prefix", default="Alpha", help="prefix filter when using --all")
+    p5.add_argument("--ts-symbol", default="", help="preferred symbol for time-series panel")
+    p5.add_argument(
+        "--heatmap-symbols",
+        nargs="*",
+        default=[],
+        help="explicit symbols for heatmap; fallback to coverage ranking",
+    )
+    p5.add_argument("--heatmap-top", type=int, default=12, help="auto-selected heatmap symbols upper bound")
+    p5.add_argument("--limit", type=int, default=0, help="limit number of factors when --all")
+    p5.add_argument("--dry-run", action="store_true", help="return figures without saving images")
+    p5.set_defaults(func=cmd_visualize)
 
     args = ap.parse_args()
     args.func(args)
