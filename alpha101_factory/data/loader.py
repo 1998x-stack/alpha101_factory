@@ -8,7 +8,6 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
-from pathlib import Path
 from tqdm import tqdm
 from loguru import logger
 import pandas as pd
@@ -28,6 +27,34 @@ from alpha101_factory.config import (
 from alpha101_factory.utils.io import write_parquet, read_parquet
 from alpha101_factory.viz.plots import plot_kline, save_fig
 from alpha101_factory.data.baostock_api import fetch_kline_bs
+
+
+# ---------- 辅助工具 ----------
+def _resolve_kline_path(symbol: str,
+                        start_date: str | None,
+                        end_date: str | None,
+                        adjust: str | None) -> Path:
+    """统一生成 K 线 parquet 文件路径。
+
+    Args:
+        symbol (str): 股票代码，允许带交易所前缀（如 ``sh600000``）。
+        start_date (str | None): 起始日期 ``YYYYMMDD``，若为空则使用全量文件名。
+        end_date (str | None): 结束日期 ``YYYYMMDD``，若为空则使用全量文件名。
+        adjust (str | None): 复权方式，默认回退到全局 ``ADJUST``。
+
+    Returns:
+        Path: 生成的 parquet 路径，若未指定日期范围则返回 ``<symbol>.parquet``。
+    """
+
+    sym = ''.join(filter(str.isdigit, symbol)) or symbol
+    start = (start_date or "").strip()
+    end = (end_date or "").strip()
+    adj = (adjust if adjust is not None else ADJUST)
+    adj = adj.strip() if isinstance(adj, str) else adj
+
+    if start and end:
+        return PARQ_DIR_KLINES / f"{sym}_{start}_{end}_{adj}.parquet"
+    return PARQ_DIR_KLINES / f"{sym}.parquet"
 
 
 # ---------- 数据标准化 ----------
@@ -141,7 +168,11 @@ def _save_kline_png(sym: str, df: pd.DataFrame,
 
 # ---------- 公共 API ----------
 def fetch_spot(save: bool = True) -> pd.DataFrame:
-    """获取 A 股实时行情快照."""
+    """获取或读取 A 股实时行情快照。
+
+    若本地已存在缓存文件 ``a_spot.parquet``，优先读取缓存以避免重复请求。
+    否则将通过 AkShare 获取实时行情，并根据 ``save`` 参数决定是否缓存。
+    """
     logger.info("正在获取 A 股实时行情 …")
     spot_path = PARQ_DIR_SPOT / "a_spot.parquet"
     if spot_path.exists():
@@ -177,7 +208,8 @@ def fetch_klines_from_spot(spot: pd.DataFrame) -> int:
     n_new = 0
     for sym in tqdm(codes, desc="下载日线"):
         sym = ''.join(filter(str.isdigit, sym))
-        out = PARQ_DIR_KLINES / f"{sym}_{START_DATE}_{END_DATE}_{ADJUST}.parquet" if START_DATE and END_DATE else PARQ_DIR_KLINES / f"{sym}.parquet"
+        out = _resolve_kline_path(sym, START_DATE if START_DATE else None,
+                                  END_DATE if END_DATE else None, ADJUST)
 
         if out.exists():
             # 已有本地文件，直接绘图
@@ -214,7 +246,8 @@ def check_klines_integrity() -> pd.DataFrame:
 
     for code in codes:
         code = ''.join(filter(str.isdigit, code))
-        path = PARQ_DIR_KLINES / f"{code}_{START_DATE}_{END_DATE}_{ADJUST}.parquet" if START_DATE and END_DATE else PARQ_DIR_KLINES / f"{code}.parquet"
+        path = _resolve_kline_path(code, START_DATE if START_DATE else None,
+                                   END_DATE if END_DATE else None, ADJUST)
         if not path.exists():
             rows.append([code, False, 0, None, None, str(path)])
             continue
@@ -256,7 +289,9 @@ def load_or_fetch_symbol(symbol: str, start_date: str | None,
     Returns:
         pd.DataFrame: 股票 K 线数据。
     """
-    out = PARQ_DIR_KLINES / f"{symbol}_{start_date}_{end_date}_{adjust}.parquet"
+    sym = ''.join(filter(str.isdigit, symbol)) or symbol
+    out = _resolve_kline_path(sym, start_date if start_date else None,
+                              end_date if end_date else None, adjust)
 
     if out.exists():
         df = read_parquet(out)
@@ -267,16 +302,16 @@ def load_or_fetch_symbol(symbol: str, start_date: str | None,
             if end_date:
                 d = d[d["datetime"] <= pd.to_datetime(end_date)]
             if save_image and not d.empty:
-                _save_kline_png(symbol, d, start_date or "all", end_date or "all", adjust)
+                _save_kline_png(sym, d, start_date or "all", end_date or "all", adjust)
             return d
 
     # 无本地数据则获取
-    k = _fetch_kline_fallback(symbol, start_date, end_date, adjust)
+    k = _fetch_kline_fallback(sym, start_date, end_date, adjust)
     if k is not None and not k.empty:
-        k.insert(0, "symbol", symbol)
+        k.insert(0, "symbol", sym)
         write_parquet(k, out)
         if save_image:
-            _save_kline_png(symbol, k, start_date or "all", end_date or "all", adjust)
+            _save_kline_png(sym, k, start_date or "all", end_date or "all", adjust)
 
     return k
 
