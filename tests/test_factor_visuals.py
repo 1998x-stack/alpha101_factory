@@ -8,7 +8,7 @@ import pytest
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from alpha101_factory.viz import factor_summary
+from alpha101_factory.viz import factor_summaryx
 from alpha101_factory.viz.factor_summary import (
     generate_all_factor_visuals,
     generate_factor_visuals,
@@ -126,7 +126,6 @@ def test_generate_all_factor_visuals_reads_parquet(patched_factor_env):
     finally:
         if path.exists():
             path.unlink()
-
 
 def test_generate_all_factor_visuals_prefix_and_limit(patched_factor_env):
     df = _sample_frame()
