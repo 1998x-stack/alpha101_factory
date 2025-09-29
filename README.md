@@ -100,7 +100,7 @@
 * `START_DATE / END_DATE`：全局抓取范围（也可用 `fetch-one --start/--end` 临时覆盖）
 * `LIMIT_STOCKS`：调试时限制股票数量
 * `REQUEST_PAUSE`：抓取节流
-* 图片目录：`images/klines`、`images/backtest`
+* 图片目录：`images/klines`、`images/backtest`、`images/factors/*`
 
 ### B. 数据获取（AkShare→Baostock 兜底）
 
@@ -154,6 +154,9 @@ python -m alpha101_factory.cli factor --factors Alpha101 --stock 600000
 
 # 4) 回测评估（会自动从 factors/*.parquet + klines 读取）
 python -m alpha101_factory.backtest.run_bt --alpha Alpha101 --horizon 1 --quantiles 5
+
+# 5) 因子可视化（批量输出时间序列/截面/热力图到 images/factors）
+python -m alpha101_factory.cli visualize --all --prefix Alpha
 ```
 
 > Colab 可用同样命令；注意 `kaleido` 负责把 Plotly figure 存为 PNG。
