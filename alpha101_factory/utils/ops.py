@@ -260,6 +260,19 @@ def cs_zscore(s: pd.Series) -> pd.Series:
 # ============================================================================
 # 按股票分组计算
 # ============================================================================
+def argmin(s: pd.Series, n: int) -> pd.Series:
+    """计算滚动窗口内最小值位置的索引（从窗口末尾计起）。
+
+    Args:
+        s (pd.Series): 输入序列。
+        n (int): 窗口大小。
+
+    Returns:
+        pd.Series: 每个位置对应窗口内最小值的相对位置。
+    """
+    return s.rolling(n, min_periods=n).apply(lambda x: np.argmin(x), raw=True)
+
+
 def by_symbol(df: pd.DataFrame, col: str, func, *args, **kwargs) -> pd.Series:
     """对 DataFrame 按 symbol 分组后在指定列上应用函数。
 

@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 import pandas as pd
 import numpy as np
+from loguru import logger
 
 
 def make_forward_return(price_df: pd.DataFrame, horizon: int = 1) -> Optional[pd.Series]:
@@ -38,7 +39,7 @@ def make_forward_return(price_df: pd.DataFrame, horizon: int = 1) -> Optional[pd
         )
         return pd.Series(ret.values, index=idx, name="fwd_ret")
     except Exception as e:
-        print(f"[make_forward_return] 错误: {e}")
+        logger.error(f"[make_forward_return] 错误: {e}")
         return None
 
 
@@ -144,7 +145,7 @@ def ic_rankic(factor_df: pd.DataFrame, price_df: pd.DataFrame, horizon: int = 1)
             })
         return {"daily": daily, "summary": summary, "ts_summary": ts_summary}
     except Exception as e:
-        print(f"[ic_rankic] 错误: {e}")
+        logger.error(f"[ic_rankic] 错误: {e}")
         return {"daily": pd.DataFrame(), "summary": pd.DataFrame(), "ts_summary": pd.DataFrame()}
 
 
@@ -216,5 +217,5 @@ def quantile_portfolios(factor_df: pd.DataFrame, price_df: pd.DataFrame,
 
         return {"ports": port_pivot, "ls": ls}
     except Exception as e:
-        print(f"[quantile_portfolios] 错误: {e}")
+        logger.error(f"[quantile_portfolios] 错误: {e}")
         return {"ports": pd.DataFrame(), "ls": pd.DataFrame()}

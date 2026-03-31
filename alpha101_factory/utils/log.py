@@ -14,9 +14,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
-
 from loguru import logger
-from pathlib import Path
 from alpha101_factory.config import LOG_DIR
 
 
@@ -41,7 +39,7 @@ def setup_logger() -> logger:
 
     # ===== 控制台日志 =====
     try:
-        logger.add(lambda msg: print(msg, end=""))  # 直接打印到标准输出
+        logger.add(sys.stderr, colorize=True)
     except Exception as e:
         print(f"[警告] 控制台日志配置失败: {e}")
 

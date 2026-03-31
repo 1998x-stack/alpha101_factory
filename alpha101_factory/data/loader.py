@@ -129,8 +129,6 @@ def _fetch_kline_ak(symbol: str, start_date: str | None,
 def _fetch_kline_fallback(symbol: str, start_date: str | None,
                           end_date: str | None, adjust: str) -> pd.DataFrame:
     """获取 K 线数据，优先 AkShare，失败则回退至 Baostock."""
-    symbol = ''.join(filter(str.isdigit, symbol))
-    logger.info(f"正在获取 {symbol} {start_date or 'start'}~{end_date or 'end'} {adjust} K 线数据 …")
     try:
         k = _fetch_kline_ak(symbol, start_date, end_date, adjust)
         if k is not None and not k.empty:

@@ -40,7 +40,7 @@ def _load_join(symbols: Optional[List[str]]) -> pd.DataFrame:
                       若无有效数据，返回空 DataFrame。
     """
     if symbols is None:
-        symbols = sorted({p.stem for p in (PARQ_DIR_TMP).glob("*.parquet")})
+        symbols = sorted({p.stem.split("_")[0] for p in (PARQ_DIR_TMP).glob("*.parquet")})
 
     dfs = []
     for sym in symbols:

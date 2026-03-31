@@ -21,7 +21,7 @@ def bs_code(symbol: str) -> str:
         str: Baostock 格式代码，如 'sh.600000' 或 'sz.000001'。
     """
     s = str(symbol).zfill(6)
-    if s.startswith("6"):
+    if s.startswith(("6", "9")):
         return f"sh.{s}"
     return f"sz.{s}"
 

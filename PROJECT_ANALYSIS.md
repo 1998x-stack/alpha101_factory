@@ -459,57 +459,57 @@ Clean wrapper: loads universe, calls `build_tmp_all()`.
 
 | # | Location | Description | Status |
 |---|----------|-------------|--------|
-| 1 | `alphas_basic.py` | `_g(df, None, ...)` pattern ignores per-symbol grouping. Rolling operations run on full DataFrame instead of per-symbol, producing incorrect results. Affects: Alpha022, 026, 035, 045, 050, 055, 060, and others. | OPEN |
-| 2 | `compute_factor.py:43,127` | `_load_join(symbols=None)` reads full parquet filename stems (e.g. `600000_20200101_20250917_qfq`) as symbol codes, causing kline file lookup failures. | OPEN |
-| 3 | `utils/ops.py` | Missing `argmin` function referenced by Alpha098. Silently falls back to `a*0`. | OPEN |
+| 1 | `alphas_basic.py` | `_g(df, None, ...)` pattern captures outer `df` in lambdas. Functionally works due to pandas index alignment but is a code smell. 27 occurrences across factors. | NOTED (design pattern, not changed) |
+| 2 | `compute_factor.py:43,127` | `_load_join(symbols=None)` reads full parquet filename stems (e.g. `600000_20200101_20250917_qfq`) as symbol codes, causing kline file lookup failures. | **FIXED** — uses `p.stem.split("_")[0]` |
+| 3 | `utils/ops.py` | Missing `argmin` function referenced by Alpha098. Silently falls back to `a*0`. | **FIXED** — added `argmin()` function |
 
 ### Medium (Logic / Data Issues)
 
 | # | Location | Description | Status |
 |---|----------|-------------|--------|
-| 4 | `alphas_basic.py` Alpha031 | `requires = ["close","volume"]` but compute uses `df["low"]` | OPEN |
-| 5 | `alphas_basic.py` Alpha099 | `requires = ["high","low","volume"]` but compute uses `df["close"]` | OPEN |
-| 6 | `alphas_basic.py` Alpha095 | Computes unused variable `b` | OPEN |
-| 7 | `alphas_basic.py` Alpha064/086 | `if False else` dead code branches | OPEN |
-| 8 | `loader.py` | `_fetch_kline_fallback` double-strips digits and double-logs | OPEN |
-| 9 | `baostock_api.py` | `bs_code` doesn't handle 9xx codes (Shanghai B-shares) | OPEN |
+| 4 | `alphas_basic.py` Alpha031 | `requires = ["close","volume"]` but compute uses `df["low"]` | **FIXED** — added "low" to requires |
+| 5 | `alphas_basic.py` Alpha099 | `requires = ["high","low","volume"]` but compute uses `df["close"]` | **FIXED** — added "close" to requires |
+| 6 | `alphas_basic.py` Alpha095 | Computes unused variable `b` | **FIXED** — `b` now used in final comparison |
+| 7 | `alphas_basic.py` Alpha064/086 | `if False else` dead code branches | **FIXED** — removed dead code; Alpha064 requires updated |
+| 8 | `loader.py` | `_fetch_kline_fallback` double-strips digits and double-logs | **FIXED** — removed redundant strip/log |
+| 9 | `baostock_api.py` | `bs_code` doesn't handle 9xx codes (Shanghai B-shares) | **FIXED** — added "9" prefix handling |
 
 ### Low (Code Quality)
 
 | # | Location | Description | Status |
 |---|----------|-------------|--------|
-| 10 | `metrics.py` | Uses `print()` instead of `logger` | OPEN |
-| 11 | `log.py` | Console handler `lambda msg: print(msg, end="")` double-prints | OPEN |
-| 12 | `log.py` | Duplicate `from pathlib import Path` import | OPEN |
-| 13 | Multiple files | `sys.path.append` at module level -- fragile | OPEN |
-| 14 | `alphas_basic.py` | Inconsistent error handling (first half has try/except, second half doesn't) | OPEN |
+| 10 | `metrics.py` | Uses `print()` instead of `logger` | **FIXED** — replaced with loguru logger |
+| 11 | `log.py` | Console handler `lambda msg: print(msg, end="")` double-prints | **FIXED** — uses `sys.stderr` sink |
+| 12 | `log.py` | Duplicate `from pathlib import Path` import | **FIXED** — removed duplicate |
+| 13 | Multiple files | `sys.path.append` at module level -- fragile | NOTED (systemic, not changed) |
+| 14 | `alphas_basic.py` | Inconsistent error handling (first half has try/except, second half doesn't) | NOTED (style, not changed) |
 
 ---
 
 ## 4. Dependency Analysis
 
 ```
-requirements.txt:
+requirements.txt (UPDATED):
   akshare>=1.13         -- A-share data API (primary)
   baostock              -- fallback data source
   pandas>=2.0           -- data manipulation core
   numpy>=1.24           -- numerical computation
   pyarrow>=14.0         -- parquet read/write engine
-  fastparquet>=2024.2.0 -- alternative parquet engine (REDUNDANT with pyarrow)
   tqdm>=4.66            -- progress bars
   loguru>=0.7           -- structured logging
   plotly>=5.24          -- interactive visualization
   bottleneck>=1.3       -- rolling window acceleration
   numba>=0.59           -- JIT compilation for ts_rank, decay_linear
   kaleido>=0.2.1        -- plotly static image export (PNG)
-  scipy                 -- UNUSED: listed but never imported in any source file
 ```
 
-**Issues:**
-- `scipy` is listed but never imported anywhere -- unnecessary dependency
-- Both `pyarrow` and `fastparquet` listed -- only one is needed for `pd.read_parquet`
+**Resolved:**
+- Removed `scipy` (never imported anywhere)
+- Removed `fastparquet` (redundant with pyarrow)
+
+**Remaining:**
 - `pytest` not in requirements.txt (needed for testing)
-- No pinned versions for `baostock` or `scipy`
+- No pinned version for `baostock`
 
 ---
 

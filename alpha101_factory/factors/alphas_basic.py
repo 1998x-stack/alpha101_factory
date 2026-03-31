@@ -1669,13 +1669,13 @@ class Alpha031(Factor):
     该因子由三个子项相加：价格动量、短期跌幅、以及成交量与低价的相关性方向。
     """
     name = "Alpha031"
-    requires = ["close","volume"]
+    requires = ["close","volume","low"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
         """
         计算Alpha031因子值。
 
         Args:
-            df: 包含close、volume（可选low）列的DataFrame
+            df: 包含close、volume、low列的DataFrame
 
         Returns:
             因子值的Series
@@ -1684,7 +1684,7 @@ class Alpha031(Factor):
             a = ops.cs_rank(ops.decay_linear(- _cs_rank(_g(df,"close", lambda s: ops.delta(s,10))), 10))
             b = ops.cs_rank(- _g(df,"close", ops.delta, 3))
             adv20 = _g(df,"volume", lambda s: ops.adv(s,20))
-            c = np.sign(ops.cs_rank(_g(df,"volume", lambda s: ops.rolling_corr(adv20, df.loc[s.index,"low"] if "low" in df.columns else s, 12))))
+            c = np.sign(ops.cs_rank(_g(df,"volume", lambda s: ops.rolling_corr(adv20, df.loc[s.index,"low"], 12))))
             val = a + b + c
             return Factor.as_cs_series(df, val)
         except Exception as e:
@@ -1789,7 +1789,7 @@ class Alpha061(Factor):
 @register
 class Alpha064(Factor):
     name = "Alpha064"
-    requires = ["open","low","vwap","close"]
+    requires = ["open","low","high","vwap","volume"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
         a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr((_g(df,"open", lambda s: 0.178404*s) + (df["low"]*(1-0.178404))), _g(df,"volume", lambda s: ops.adv(s,120)), int(16.6208))))
         b = ops.cs_rank(_g(df, None, lambda *_: ops.delta((((df["high"]+df["low"])/2)*0.178404 + df["vwap"]*(1-0.178404)), int(3.69741))))
@@ -1952,7 +1952,7 @@ class Alpha086(Factor):
             因子值的Series
         """
         try:
-            a = _g(df,"close", lambda s: ops.ts_rank(ops.rolling_corr(s, _g(df,"volume", lambda s2: ops.adv(s2,20)) .groupby(level=0, group_keys=False) if False else _g(df,"volume", lambda s2: ops.adv(s2,20)), int(6.00049)), int(20.4195)))
+            a = _g(df,"close", lambda s: ops.ts_rank(ops.rolling_corr(s, _g(df,"volume", lambda s2: ops.adv(s2,20)), int(6.00049)), int(20.4195)))
             b = ops.cs_rank((df["open"] + df["close"]) - (df["vwap"] + df["open"]))
             val = (a < b).astype(float) * -1
             return Factor.as_cs_series(df, val)
@@ -2010,8 +2010,8 @@ class Alpha095(Factor):
         try:
             a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(_g(df,"close", lambda s: ops.rolling_sum((df["high"]+df["low"])/2, int(19.1351))),
                                                                      _g(df,"volume", lambda s: ops.adv(s,40)), int(12.8742))) ** 5)
-            b = _g(df,"open", lambda s: ops.ts_rank(s - _g(df,"open", lambda s2: ops.rolling_min(s2, int(12.4105))), 1))
-            val = (ops.cs_rank(df["open"] - _g(df,"open", lambda s: ops.rolling_min(s, int(12.4105)))) < a).astype(float)
+            b = ops.cs_rank(df["open"] - _g(df,"open", lambda s: ops.rolling_min(s, int(12.4105))))
+            val = (b < a).astype(float)
             return Factor.as_cs_series(df, val)
         except Exception as e:
             raise RuntimeError(f"计算Alpha095因子时发生错误: {str(e)}") from e
@@ -2066,7 +2066,7 @@ class Alpha098(Factor):
         try:
             adv5 = _g(df,"volume", lambda s: ops.adv(s,5))
             a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(df["vwap"], _g(df,"volume", lambda s: ops.rolling_sum(adv5, int(26.4719))), int(4.58418))))
-            b = _g(df, None, lambda *_: ops.ts_rank(ops.ts_rank(ops.argmin(ops.rolling_corr(ops.cs_rank(df["open"]), _g(df,"volume", lambda s: ops.adv(s,15)), int(20.8187))), int(6.95668)), int(8.07206))) if hasattr(np, "argmin") else a*0
+            b = _g(df, None, lambda *_: ops.ts_rank(ops.ts_rank(ops.argmin(ops.rolling_corr(ops.cs_rank(df["open"]), _g(df,"volume", lambda s: ops.adv(s,15)), int(20.8187)), int(6.95668)), int(6.95668)), int(8.07206)))
             val = a - b
             return Factor.as_cs_series(df, val)
         except Exception as e:
@@ -2080,7 +2080,7 @@ class Alpha099(Factor):
     比较两个价格与成交量的相关排名大小并取小于关系的负号。
     """
     name = "Alpha099"
-    requires = ["high","low","volume"]
+    requires = ["high","low","volume","close"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
         """
         计算Alpha099因子值。
