@@ -17,7 +17,7 @@
 **Files:**
 - Create: `PROJECT_ANALYSIS.md`
 
-- [ ] **Step 1: Write the project overview section**
+- [x]**Step 1: Write the project overview section**
 
 Write `PROJECT_ANALYSIS.md` with these sections:
 
@@ -52,7 +52,7 @@ Utils:    utils/ops.py (bottleneck/numba), utils/io.py, utils/log.py
 **Stats:** ~4,700 lines of Python across 20 modules, 2 test files, 55+ Alpha factors implemented.
 ```
 
-- [ ] **Step 2: Write the Data Layer section**
+- [x]**Step 2: Write the Data Layer section**
 
 Append the Data Layer analysis covering 3 files:
 
@@ -90,7 +90,7 @@ Append the Data Layer analysis covering 3 files:
   - `load_universe(limit=0) -> Series` — reads a_spot.parquet, returns 6-digit codes
 - Potential issues: None significant, clean implementation
 
-- [ ] **Step 3: Commit Phase 1a**
+- [x]**Step 3: Commit Phase 1a**
 
 ```bash
 git add PROJECT_ANALYSIS.md
@@ -102,7 +102,7 @@ git commit -m "docs: add PROJECT_ANALYSIS.md Phase 1a — overview and data laye
 **Files:**
 - Modify: `PROJECT_ANALYSIS.md`
 
-- [ ] **Step 1: Write the Factor System section**
+- [x]**Step 1: Write the Factor System section**
 
 Append analysis of 5 files:
 
@@ -155,7 +155,7 @@ Append analysis of 5 files:
   - `load_panel(symbols) -> DataFrame` — merge tmp files into long table
 - Clean implementation, proper error handling
 
-- [ ] **Step 2: Commit Phase 1b**
+- [x]**Step 2: Commit Phase 1b**
 
 ```bash
 git add PROJECT_ANALYSIS.md
@@ -167,7 +167,7 @@ git commit -m "docs: add factor system analysis to PROJECT_ANALYSIS.md"
 **Files:**
 - Modify: `PROJECT_ANALYSIS.md`
 
-- [ ] **Step 1: Write Pipeline section**
+- [x]**Step 1: Write Pipeline section**
 
 **`alpha101_factory/pipeline/compute_factor.py` (149 lines)**
 - Purpose: Load kline+tmp data, compute factors, save results
@@ -188,7 +188,7 @@ git commit -m "docs: add factor system analysis to PROJECT_ANALYSIS.md"
 - Key functions: `main()` — loads universe and builds all tmp files
 - Clean wrapper
 
-- [ ] **Step 2: Write Backtest section**
+- [x]**Step 2: Write Backtest section**
 
 **`alpha101_factory/backtest/metrics.py` (220 lines)**
 - Purpose: IC/RankIC computation and quantile portfolio construction
@@ -209,7 +209,7 @@ git commit -m "docs: add factor system analysis to PROJECT_ANALYSIS.md"
   - `main()` — argparse CLI with IC/RankIC + quantile portfolio analysis
 - Clean implementation with good error handling
 
-- [ ] **Step 3: Write Visualization section**
+- [x]**Step 3: Write Visualization section**
 
 **`alpha101_factory/viz/plots.py` (276 lines)**
 - Purpose: Plotly visualization functions
@@ -233,7 +233,7 @@ git commit -m "docs: add factor system analysis to PROJECT_ANALYSIS.md"
 - Potential issues:
   - `_load_factor_frame` returns `pd.DataFrame` but also checks `if df is None` — `read_parquet` never returns None (returns empty DataFrame), so this check is unreachable but harmless
 
-- [ ] **Step 4: Write Utils, CLI, Config, Tests sections**
+- [x]**Step 4: Write Utils, CLI, Config, Tests sections**
 
 **`alpha101_factory/utils/ops.py` (276 lines)**
 - Purpose: Financial quantitative computation utilities with optional acceleration
@@ -277,7 +277,7 @@ git commit -m "docs: add factor system analysis to PROJECT_ANALYSIS.md"
   - `test_generate_factor_visuals_returns_figures` — verifies figure generation with sample data
   - `test_generate_all_factor_visuals_reads_parquet` — verifies batch visualization from parquet
 
-- [ ] **Step 5: Write Bug Registry and Coverage Analysis sections**
+- [x]**Step 5: Write Bug Registry and Coverage Analysis sections**
 
 ## Bug & Issue Registry
 
@@ -342,14 +342,14 @@ Issues:
 - No **pytest** in requirements.txt (needed for testing)
 - No pinned versions for baostock or scipy
 
-- [ ] **Step 6: Commit Phase 1c**
+- [x]**Step 6: Commit Phase 1c**
 
 ```bash
 git add PROJECT_ANALYSIS.md
 git commit -m "docs: complete PROJECT_ANALYSIS.md — pipeline, backtest, viz, utils, bug registry"
 ```
 
-- [ ] **Step 7: User review gate — present PROJECT_ANALYSIS.md for review**
+- [x]**Step 7: User review gate — present PROJECT_ANALYSIS.md for review**
 
 Pause and ask: "Phase 1 complete. PROJECT_ANALYSIS.md is ready for review. Please check it and let me know when to proceed to Phase 2 (test execution)."
 
@@ -362,7 +362,7 @@ Pause and ask: "Phase 1 complete. PROJECT_ANALYSIS.md is ready for review. Pleas
 **Files:**
 - None modified
 
-- [ ] **Step 1: Run pytest**
+- [x]**Step 1: Run pytest**
 
 ```bash
 cd /Users/xd/Desktop/codes/mygithubs/alpha101_factory
@@ -371,13 +371,13 @@ python -m pytest tests/ -v
 
 Expected: 4 tests. Document pass/fail status.
 
-- [ ] **Step 2: Run import validation**
+- [x]**Step 2: Run import validation**
 
 ```bash
 python -c "import alpha101_factory; from alpha101_factory import config, cli; from alpha101_factory.factors import registry; print('All imports OK'); print('Registered factors:', registry.list_factors())"
 ```
 
-- [ ] **Step 3: Run CLI smoke test (check command — no network)**
+- [x]**Step 3: Run CLI smoke test (check command — no network)**
 
 ```bash
 python -m alpha101_factory.cli check
@@ -385,7 +385,7 @@ python -m alpha101_factory.cli check
 
 Expected: Reports on local kline files.
 
-- [ ] **Step 4: Document all results**
+- [x]**Step 4: Document all results**
 
 Create a test results summary in the conversation. Include:
 - pytest output (pass/fail per test)
@@ -393,7 +393,7 @@ Create a test results summary in the conversation. Include:
 - CLI smoke test output
 - Any errors or warnings
 
-- [ ] **Step 5: User review gate**
+- [x]**Step 5: User review gate**
 
 Pause: "Phase 2 complete. Here are the test results. Ready to proceed to Phase 3 (bug fixes)?"
 
@@ -407,7 +407,7 @@ Pause: "Phase 2 complete. Here are the test results. Ready to proceed to Phase 3
 - Modify: `alpha101_factory/pipeline/compute_factor.py`
 - Modify: `alpha101_factory/utils/ops.py`
 
-- [ ] **Step 1: Fix `_load_join` symbol parsing when symbols=None**
+- [x]**Step 1: Fix `_load_join` symbol parsing when symbols=None**
 
 In `compute_factor.py:43`, the current code reads full parquet stems (e.g. `600000_20200101_20250917_qfq`) as symbols. Fix to extract just the symbol code:
 
@@ -424,7 +424,7 @@ Apply the same fix in `main()` at line 127.
 Run: `python -m pytest tests/ -v`
 Expected: All existing tests still pass.
 
-- [ ] **Step 2: Add `argmin` function to ops.py**
+- [x]**Step 2: Add `argmin` function to ops.py**
 
 Add after the `decay_linear` function:
 
@@ -437,7 +437,7 @@ def argmin(s: pd.Series, n: int) -> pd.Series:
 Run: `python -m pytest tests/ -v`
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit critical fixes**
+- [x]**Step 3: Commit critical fixes**
 
 ```bash
 git add alpha101_factory/pipeline/compute_factor.py alpha101_factory/utils/ops.py
@@ -451,7 +451,7 @@ git commit -m "fix: correct symbol parsing in _load_join and add missing argmin 
 - Modify: `alpha101_factory/data/loader.py`
 - Modify: `alpha101_factory/data/baostock_api.py`
 
-- [ ] **Step 1: Fix `requires` lists for Alpha031 and Alpha099**
+- [x]**Step 1: Fix `requires` lists for Alpha031 and Alpha099**
 
 In `alphas_basic.py`:
 
@@ -459,17 +459,17 @@ Alpha031 (line ~1673): Change `requires = ["close","volume"]` to `requires = ["c
 
 Alpha099 (line ~2083): Change `requires = ["high","low","volume"]` to `requires = ["high","low","volume","close"]`
 
-- [ ] **Step 2: Remove dead code in Alpha064, Alpha086, Alpha095**
+- [x]**Step 2: Remove dead code in Alpha064, Alpha086, Alpha095**
 
 Alpha064 (line ~1794): Remove `if False else` dead branch
 Alpha086 (line ~1955): Remove `.groupby(...) if False else` dead branch
 Alpha095 (line ~2013): Remove unused variable `b`
 
-- [ ] **Step 3: Fix double-stripping in loader.py**
+- [x]**Step 3: Fix double-stripping in loader.py**
 
 In `_fetch_kline_fallback` (line 132), remove the `symbol = ''.join(filter(str.isdigit, symbol))` line — `_fetch_kline_ak` already does this.
 
-- [ ] **Step 4: Improve bs_code for BSE stocks**
+- [x]**Step 4: Improve bs_code for BSE stocks**
 
 In `baostock_api.py`, update `bs_code`:
 
@@ -483,7 +483,7 @@ def bs_code(symbol: str) -> str:
 
 Note: 8xx/4xx codes for BSE (北交所) are handled by `sz.` prefix in Baostock as they trade on NEEQ/BSE which maps to Shenzhen in Baostock's system. However 9xx Shanghai B-shares should be `sh.`.
 
-- [ ] **Step 5: Commit medium fixes**
+- [x]**Step 5: Commit medium fixes**
 
 ```bash
 git add alpha101_factory/factors/alphas_basic.py alpha101_factory/data/loader.py alpha101_factory/data/baostock_api.py
@@ -497,11 +497,11 @@ git commit -m "fix: correct requires lists, remove dead code, fix double-strippi
 - Modify: `alpha101_factory/utils/log.py`
 - Modify: `requirements.txt`
 
-- [ ] **Step 1: Replace print() with logger in metrics.py**
+- [x]**Step 1: Replace print() with logger in metrics.py**
 
 Replace all `print(f"[...]` calls with `logger.error(...)` or `logger.warning(...)`. Add `from loguru import logger` import at top.
 
-- [ ] **Step 2: Fix log.py console handler and duplicate import**
+- [x]**Step 2: Fix log.py console handler and duplicate import**
 
 Remove duplicate `from pathlib import Path` import. Replace the console handler:
 
@@ -513,11 +513,11 @@ logger.add(lambda msg: print(msg, end=""))
 logger.add(sys.stderr, level="DEBUG")
 ```
 
-- [ ] **Step 3: Clean up requirements.txt**
+- [x]**Step 3: Clean up requirements.txt**
 
 Remove `scipy` (unused). Add `pytest>=7.0` to dev dependencies or note it.
 
-- [ ] **Step 4: Commit low-priority fixes**
+- [x]**Step 4: Commit low-priority fixes**
 
 ```bash
 git add alpha101_factory/backtest/metrics.py alpha101_factory/utils/log.py requirements.txt
@@ -533,7 +533,7 @@ git commit -m "fix: use logger in metrics, fix log handler, clean requirements"
 **Files:**
 - Modify: `PROJECT_ANALYSIS.md`
 
-- [ ] **Step 1: Rerun pytest**
+- [x]**Step 1: Rerun pytest**
 
 ```bash
 python -m pytest tests/ -v
@@ -541,7 +541,7 @@ python -m pytest tests/ -v
 
 Expected: All 4 tests pass.
 
-- [ ] **Step 2: Rerun import validation**
+- [x]**Step 2: Rerun import validation**
 
 ```bash
 python -c "import alpha101_factory; from alpha101_factory.factors import registry; print('Factors:', registry.list_factors())"
@@ -549,7 +549,7 @@ python -c "import alpha101_factory; from alpha101_factory.factors import registr
 
 Expected: All 55+ factors listed, no import errors.
 
-- [ ] **Step 3: Rerun CLI smoke test**
+- [x]**Step 3: Rerun CLI smoke test**
 
 ```bash
 python -m alpha101_factory.cli check
@@ -557,7 +557,7 @@ python -m alpha101_factory.cli check
 
 Expected: No errors.
 
-- [ ] **Step 4: Verify fixed bugs**
+- [x]**Step 4: Verify fixed bugs**
 
 Run targeted checks:
 ```bash
@@ -565,11 +565,11 @@ python -c "from alpha101_factory.utils.ops import argmin; print('argmin exists:'
 python -c "from alpha101_factory.pipeline.compute_factor import _load_join; print('_load_join importable')"
 ```
 
-- [ ] **Step 5: Update PROJECT_ANALYSIS.md with final state**
+- [x]**Step 5: Update PROJECT_ANALYSIS.md with final state**
 
 Update the Bug Registry section to mark all fixed issues. Add a "Validation Results" section documenting all test passes.
 
-- [ ] **Step 6: Final commit**
+- [x]**Step 6: Final commit**
 
 ```bash
 git add PROJECT_ANALYSIS.md
