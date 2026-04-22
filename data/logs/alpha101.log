@@ -1,12 +1,40 @@
-2025-09-18 11:01:06.132 | INFO     | __main__:cmd_fetch_one:23 - Loaded/Fetched 600000: rows=970, range=2020-01-02 00:00:00..2023-12-29 00:00:00
-2025-09-18 11:02:08.363 | INFO     | alpha101_factory.factors.tmp_features:build_tmp_all:40 - tmp features saved: 1
-2025-09-18 11:10:59.367 | INFO     | __main__:cmd_fetch_one:23 - Loaded/Fetched 600000: rows=970, range=2020-01-02 00:00:00..2023-12-29 00:00:00
-2025-09-18 11:11:38.332 | INFO     | alpha101_factory.factors.tmp_features:build_tmp_all:40 - tmp features saved: 1
-2025-09-18 11:11:49.121 | INFO     | alpha101_factory.pipeline.compute_factor:compute_and_save:34 - Computing factor Alpha101 on ['600000'] …
-2025-09-18 11:11:49.206 | INFO     | alpha101_factory.pipeline.compute_factor:compute_and_save:43 - Saved factor to /Users/mx/Desktop/Factory-Code/alpha101_factory/data/factors/Alpha101.parquet rows=970
-2025-09-18 11:22:31.223 | INFO     | __main__:cmd_fetch_one:23 - Loaded/Fetched 600000: rows=970, range=2020-01-02 00:00:00..2023-12-29 00:00:00
-2025-09-18 14:23:05.463 | INFO     | alpha101_factory.data.loader:_fetch_kline_fallback:106 - 正在获取 600000 20200101~20240101 qfq K 线数据 …
-2025-09-18 14:23:05.464 | INFO     | alpha101_factory.data.loader:_fetch_kline_ak:84 - 正在获取 600000 20200101~20240101 qfq K 线数据 …
-2025-09-18 14:23:05.780 | INFO     | alpha101_factory.utils.io:write_parquet:51 - 成功写入 Parquet 文件: /Users/mx/Desktop/Factory-Code/alpha101_factory/data/klines_daily/600000_20200101_20240101_qfq.parquet
-2025-09-18 14:23:08.469 | INFO     | alpha101_factory.viz.plots:save_fig:193 - 图像已保存至: /Users/mx/Desktop/Factory-Code/alpha101_factory/data/images/klines/600000_20200101_20240101_qfq.png
-2025-09-18 14:23:08.471 | INFO     | __main__:cmd_fetch_one:32 - Loaded/Fetched 600000: rows=970, range=2020-01-02 00:00:00..2023-12-29 00:00:00
+2026-04-23 00:52:41.650 | INFO     | __main__:_handle_fetch_one:174 - 开始处理单只股票: 600000, 日期范围=[20200101 .. 20250917], 复权方式=qfq
+2026-04-23 00:52:41.651 | INFO     | alpha101_factory.data.loader:load_or_fetch_symbol:542 - 600000 本地不存在，从远程数据源下载 …
+2026-04-23 00:52:41.652 | INFO     | alpha101_factory.data.factory:fetch_kline_fallback:184 - 开始获取 K 线数据: symbol=600000, start_date=20200101, end_date=20250917, adjust=qfq, 降级链=['akshare', 'baostock']
+2026-04-23 00:52:41.652 | DEBUG    | alpha101_factory.data.factory:create:134 - 已创建数据源实例: 'akshare'
+2026-04-23 00:52:41.652 | INFO     | alpha101_factory.data.sources:fetch_kline:182 - AkShare 获取 600000 20200101~20250917 qfq
+2026-04-23 00:52:41.713 | ERROR    | alpha101_factory.data.sources:fetch_kline:205 - AkShare K 线获取失败: 600000，错误: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=1&secid=1.600000&beg=20200101&end=20250917 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))
+2026-04-23 00:52:41.714 | WARNING  | alpha101_factory.data.factory:fetch_kline_fallback:215 - 数据源 'akshare' 返回空数据，尝试下一个
+2026-04-23 00:52:41.714 | DEBUG    | alpha101_factory.data.factory:create:134 - 已创建数据源实例: 'baostock'
+2026-04-23 00:52:41.714 | INFO     | alpha101_factory.data.sources:fetch_kline:356 - BaoStock 获取 600000
+2026-04-23 00:53:56.729 | ERROR    | alpha101_factory.data.sources:fetch_kline:367 - BaoStock 登录失败: 网络接收错误。
+2026-04-23 00:53:56.737 | WARNING  | alpha101_factory.data.factory:fetch_kline_fallback:215 - 数据源 'baostock' 返回空数据，尝试下一个
+2026-04-23 00:53:56.737 | ERROR    | alpha101_factory.data.factory:fetch_kline_fallback:226 - 所有数据源均无法获取 K 线数据: symbol=600000
+2026-04-23 00:53:56.738 | ERROR    | alpha101_factory.data.loader:load_or_fetch_symbol:578 - 600000 远程数据源返回空数据
+2026-04-23 00:53:56.738 | WARNING  | __main__:_handle_fetch_one:189 - 股票 600000 无可用数据
+2026-04-23 00:53:58.736 | INFO     | __main__:_handle_tmp:212 - 开始为单只股票 600000 构建中间特征...
+2026-04-23 00:53:58.736 | INFO     | alpha101_factory.factors.tmp_features:build_tmp_all:316 - 开始批量构建中间特征，共 %d 只股票
+2026-04-23 00:53:58.737 | WARNING  | alpha101_factory.factors.tmp_features:build_tmp_for_symbol:233 - K 线文件不存在: %s
+2026-04-23 00:53:58.738 | INFO     | alpha101_factory.factors.tmp_features:build_tmp_all:327 - 批量构建完成: 成功 %d 只, 失败 %d 只, 总计 %d 只
+2026-04-23 00:53:58.738 | INFO     | __main__:_handle_tmp:218 - 中间特征构建完成，成功 0 只股票
+2026-04-23 00:54:00.228 | INFO     | __main__:_handle_factor:250 - 限制计算范围: 股票 600000
+2026-04-23 00:54:00.229 | ERROR    | __main__:_handle_factor:261 - 因子 Alpha101 计算失败: compute_and_save() got an unexpected keyword argument 'symbols'
+2026-04-23 00:54:00.229 | INFO     | __main__:_handle_factor:265 - 因子计算汇总: 成功 0 个, 失败 1 个, 共计 1 个
+2026-04-23 00:54:01.672 | INFO     | __main__:_handle_check:280 - 开始校验 K 线数据完整性...
+2026-04-23 00:54:01.673 | WARNING  | alpha101_factory.utils.io:read_jsonl:94 - JSONL 文件不存在: /Users/mx/Desktop/series/项目系列/alpha101_factory/data/universe/stocks.jsonl
+2026-04-23 00:54:01.675 | WARNING  | alpha101_factory.data.loader:check_klines_integrity:394 - 未找到股票池文件，无法校验 K 线完整性: /Users/mx/Desktop/series/项目系列/alpha101_factory/data/universe/stocks.jsonl
+2026-04-23 00:54:01.675 | INFO     | __main__:_handle_check:284 - 未找到任何数据，请先运行 `fetch` 命令抓取数据
+2026-04-23 00:55:35.779 | INFO     | __main__:_handle_fetch_one:174 - 开始处理单只股票: 600000, 日期范围=[20200101 .. 20250917], 复权方式=qfq
+2026-04-23 00:55:35.780 | INFO     | alpha101_factory.data.loader:load_or_fetch_symbol:542 - 600000 本地不存在，从远程数据源下载 …
+2026-04-23 00:55:35.780 | INFO     | alpha101_factory.data.factory:fetch_kline_fallback:184 - 开始获取 K 线数据: symbol=600000, start_date=20200101, end_date=20250917, adjust=qfq, 降级链=['akshare', 'baostock']
+2026-04-23 00:55:35.781 | DEBUG    | alpha101_factory.data.factory:create:134 - 已创建数据源实例: 'akshare'
+2026-04-23 00:55:35.781 | INFO     | alpha101_factory.data.sources:fetch_kline:182 - AkShare 获取 600000 20200101~20250917 qfq
+2026-04-23 00:55:35.858 | ERROR    | alpha101_factory.data.sources:fetch_kline:206 - AkShare K 线获取失败: 600000，错误: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2026-04-23 00:55:35.859 | WARNING  | alpha101_factory.data.factory:fetch_kline_fallback:221 - 数据源 'akshare' 异常: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))，尝试下一个数据源
+2026-04-23 00:55:35.859 | DEBUG    | alpha101_factory.data.factory:create:134 - 已创建数据源实例: 'baostock'
+2026-04-23 00:55:35.859 | INFO     | alpha101_factory.data.sources:fetch_kline:357 - BaoStock 获取 600000
+2026-04-23 00:56:50.868 | ERROR    | alpha101_factory.data.sources:fetch_kline:368 - BaoStock 登录失败: 网络接收错误。
+2026-04-23 00:56:50.881 | WARNING  | alpha101_factory.data.factory:fetch_kline_fallback:215 - 数据源 'baostock' 返回空数据（API 无记录），尝试下一个
+2026-04-23 00:56:50.882 | ERROR    | alpha101_factory.data.factory:fetch_kline_fallback:227 - 所有数据源均无法获取 K 线数据: symbol=600000
+2026-04-23 00:56:50.882 | ERROR    | alpha101_factory.data.loader:load_or_fetch_symbol:578 - 600000 远程数据源返回空数据
+2026-04-23 00:56:50.883 | WARNING  | __main__:_handle_fetch_one:189 - 股票 600000 无可用数据
