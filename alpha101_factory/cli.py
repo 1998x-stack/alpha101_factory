@@ -32,6 +32,7 @@ def cmd_fetch_one(args):
         k = fetch_kline_bs(sym, args.start, args.end, adjust=adjust)
     elif source == "akshare":
         # 直接使用 AkShare
+        from alpha101_factory.data.loader import _fetch_kline_ak
         k = _fetch_kline_ak(sym, args.start, args.end, adjust)
     else:
         # 自动回退 (AkShare → Baostock → Yahoo Finance)

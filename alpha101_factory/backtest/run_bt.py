@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 """Alpha101 因子回测脚本.
 
-from __future__ import annotations
 本模块提供对指定因子进行横截面 IC/RankIC 分析、分位数组合回测，
 并将结果保存为图表和 CSV 文件。
 """

@@ -10,6 +10,7 @@
 
 适用于量化研究与回测框架中的统一日志管理。
 """
+import sys
 from loguru import logger
 from alpha101_factory.config import LOG_DIR
 

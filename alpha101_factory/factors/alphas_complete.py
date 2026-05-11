@@ -19,22 +19,17 @@ from alpha101_factory.utils import ops
 def _g(df, col, fn, *args):
     """按股票分组应用函数, 返回与 df 对齐的 MultiIndex Series."""
     m = df.set_index(["datetime", "symbol"])
-    # Apply function per symbol and collect results
-    results = []
-    for sym, group in df.groupby("symbol"):
-        res = fn(group[col], *args)
-        results.append(res)
-    # Concatenate all results
-    combined = pd.concat(results)
-    # Align with MultiIndex
-    return pd.Series(combined.values, index=m.index)
+    # 使用 transform 保留原始索引, 然后通过 values 对齐到 MultiIndex
+    result = df.groupby("symbol")[col].transform(lambda s: fn(s, *args))
+    return pd.Series(result.values, index=m.index)
 
 
 def _cs(s: pd.Series) -> pd.Series:
-    """截面排名 (要求 MultiIndex: datetime, symbol)."""
+    """截面排名: 在每个时间点上对所有股票排名 (MultiIndex: datetime, symbol)."""
     if not isinstance(s.index, pd.MultiIndex):
-        raise ValueError(f"cs_rank 需要 MultiIndex")
-    return s.groupby(level=1).rank(pct=True)
+        raise ValueError(f"_cs 需要 MultiIndex(datetime, symbol)")
+    # level=0 是 datetime → 截面排名
+    return s.groupby(level=0).rank(pct=True)
 
 
 def _mi(df):
@@ -43,7 +38,8 @@ def _mi(df):
 
 
 def _ts_rank_mi(s: pd.Series, n: int) -> pd.Series:
-    """ts_rank on MultiIndex Series (per-symbol, properly aligned)."""
+    """时间序列排名: 每只股票独立做 ts_rank (MultiIndex: datetime, symbol)."""
+    # level=1 是 symbol → 按股票分组做时间序列排名
     return s.groupby(level=1).transform(lambda x: ops.ts_rank(x, n))
 
 
@@ -155,32 +151,33 @@ class Alpha008(Factor):
 
 @register
 class Alpha009(Factor):
-    """趋势方向判断"""
+    """((0 < ts_min(delta(close, 1), 5)) * (-1)) + ((0 < ts_max(delta(close, 1), 5)) * 1)"""
     name = "Alpha009"
     requires = ["close"]
 
     def compute(self, df: pd.DataFrame) -> pd.Series:
         m = _mi(df)
-        d1 = _g(df, "close", ops.delta, 1)
-        cond1 = _g(df, "close", lambda s: ops.rolling_min(ops.delta(s, 1), 5)) > 0
-        cond2 = _g(df, "close", lambda s: ops.rolling_max(ops.delta(s, 1), 5)) < 0
-        val = np.where(cond1, d1, np.where(cond2, d1, -d1))
-        return Factor.as_cs_series(df, pd.Series(val, index=m.index))
+        delta = ops.delta(m["close"], 1)
+        ts_min = delta.groupby(level=1).transform(lambda x: ops.rolling_min(x, 5))
+        ts_max = delta.groupby(level=1).transform(lambda x: ops.rolling_max(x, 5))
+        val = ((0 < ts_min).astype(float) * (-1)) + ((0 < ts_max).astype(float) * 1)
+        return Factor.as_cs_series(df, val)
 
 
 @register
 class Alpha010(Factor):
-    """4 日窗口趋势排名"""
+    """rank(((0 < ts_min(delta(close, 1), 4))) * (-1)) + rank(((0 < ts_max(delta(close, 1), 4))) * 1)"""
     name = "Alpha010"
     requires = ["close"]
 
     def compute(self, df: pd.DataFrame) -> pd.Series:
         m = _mi(df)
-        d1 = _g(df, "close", ops.delta, 1)
-        cond1 = _g(df, "close", lambda s: ops.rolling_min(ops.delta(s, 1), 4)) > 0
-        cond2 = _g(df, "close", lambda s: ops.rolling_max(ops.delta(s, 1), 4)) < 0
-        val = np.where(cond1, d1, np.where(cond2, d1, -d1))
-        return Factor.as_cs_series(df, _cs(pd.Series(val, index=m.index)))
+        delta = ops.delta(m["close"], 1)
+        ts_min = delta.groupby(level=1).transform(lambda x: ops.rolling_min(x, 4))
+        ts_max = delta.groupby(level=1).transform(lambda x: ops.rolling_max(x, 4))
+        val1 = _cs((0 < ts_min).astype(float) * (-1))
+        val2 = _cs((0 < ts_max).astype(float) * 1)
+        return Factor.as_cs_series(df, val1 + val2)
 
 
 @register
@@ -413,7 +410,7 @@ class Alpha028(Factor):
         corr = ops.rolling_corr(adv20, m["low"], 5)
         hl_avg = (m["high"] + m["low"]) / 2
         val = corr + hl_avg - m["close"]
-        g = val.groupby(level=1)
+        g = val.groupby(level=0)
         return Factor.as_cs_series(df, (val - g.transform("mean")) / g.transform(lambda x: np.sum(np.abs(x))).replace(0, np.nan))
 
 
@@ -428,7 +425,7 @@ class Alpha029(Factor):
         delta_close = ops.delta(m["close"] - 1, 5)
         rank1 = _cs(-delta_close)
         rank2 = _cs(rank1)
-        g = rank2.groupby(level=1)
+        g = rank2.groupby(level=0)
         scale_val = (rank2 - g.transform("mean")) / g.transform(lambda x: np.sum(np.abs(x))).replace(0, np.nan)
         log_sum = ops.rolling_sum(np.log(scale_val.clip(lower=1e-10)), 2)
         rank3 = _cs(log_sum)
@@ -1548,11 +1545,11 @@ class Alpha100(Factor):
     def compute(self, df: pd.DataFrame) -> pd.Series:
         m = _mi(df)
         adv30 = _g(df, "volume", lambda s: ops.adv(s, 30))
-        g1 = m["vwap"].groupby(level=1)
+        g1 = m["vwap"].groupby(level=0)
         scale1 = (m["vwap"] - g1.transform("mean")) / g1.transform(lambda x: np.sum(np.abs(x))).replace(0, np.nan)
         hl_mix = (m["high"] * 0.51827) + (m["low"] * 0.48173)
         corr = ops.rolling_corr(hl_mix, adv30, 15)
-        g2 = corr.groupby(level=1)
+        g2 = corr.groupby(level=0)
         scale2 = (corr - g2.transform("mean")) / g2.transform(lambda x: np.sum(np.abs(x))).replace(0, np.nan)
         return Factor.as_cs_series(df, pd.Series(-(1.5 * scale1.values * scale2.values), index=m.index))
 

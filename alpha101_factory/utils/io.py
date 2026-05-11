@@ -55,4 +55,3 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
     except Exception as e:
         logger.error(f"写入 Parquet 文件失败: {path}, 错误: {e}")
         raise  # 重新抛出，让调用方知情
-        raise
