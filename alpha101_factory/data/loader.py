@@ -130,7 +130,8 @@ def _fetch_kline_ak(symbol: str, start_date: str | None,
 
 def _fetch_kline_fallback(symbol: str, start_date: str | None,
                           end_date: str | None, adjust: str) -> pd.DataFrame:
-    """获取 K 线数据，优先 AkShare，失败则回退至 Baostock."""
+    """获取 K 线数据，三级回退: AkShare → Baostock → Yahoo Finance."""
+    # 1. AkShare (主源)
     try:
         k = _fetch_kline_ak(symbol, start_date, end_date, adjust)
         if k is not None and not k.empty:
@@ -138,8 +139,27 @@ def _fetch_kline_fallback(symbol: str, start_date: str | None,
     except Exception as e:
         logger.warning(f"AkShare 获取 {symbol} 数据失败: {e}")
 
-    logger.info(f"尝试使用 Baostock 获取 {symbol} 数据 …")
-    return fetch_kline_bs(symbol, start_date, end_date, period="d", adjust=adjust)
+    # 2. Baostock (备源)
+    try:
+        logger.info(f"尝试 Baostock 获取 {symbol} …")
+        k = fetch_kline_bs(symbol, start_date, end_date, period="d", adjust=adjust)
+        if k is not None and not k.empty:
+            return k
+    except Exception as e:
+        logger.warning(f"Baostock 获取 {symbol} 数据失败: {e}")
+
+    # 3. Yahoo Finance (全球数据)
+    try:
+        logger.info(f"尝试 Yahoo Finance 获取 {symbol} …")
+        from alpha101_factory.data.yfinance_api import fetch_kline_yf
+        k = fetch_kline_yf(symbol, start_date, end_date, adjust=adjust)
+        if k is not None and not k.empty:
+            return k
+    except Exception as e:
+        logger.warning(f"Yahoo Finance 获取 {symbol} 数据失败: {e}")
+
+    logger.error(f"所有数据源均获取失败: {symbol}")
+    return pd.DataFrame()
 
 
 # ---------- 图片保存 ----------

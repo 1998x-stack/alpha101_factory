@@ -19,11 +19,42 @@ def cmd_fetch(args):
 
 def cmd_fetch_one(args):
     sym = args.stock
-    k = load_or_fetch_symbol(sym, args.start, args.end, adjust=args.adjust or ADJUST, save_image=True)
-    if k is None or k.empty:
-        logger.warning(f"No data for {sym}")
+    source = args.source
+    adjust = args.adjust or ADJUST
+
+    if source == "yfinance":
+        # 直接使用 Yahoo Finance
+        from alpha101_factory.data.yfinance_api import fetch_kline_yf
+        k = fetch_kline_yf(sym, args.start, args.end, adjust=adjust)
+    elif source == "baostock":
+        # 直接使用 Baostock
+        from alpha101_factory.data.baostock_api import fetch_kline_bs
+        k = fetch_kline_bs(sym, args.start, args.end, adjust=adjust)
+    elif source == "akshare":
+        # 直接使用 AkShare
+        k = _fetch_kline_ak(sym, args.start, args.end, adjust)
     else:
+        # 自动回退 (AkShare → Baostock → Yahoo Finance)
+        k = load_or_fetch_symbol(sym, args.start, args.end, adjust=adjust, save_image=True)
+        if k is None or k.empty:
+            logger.warning(f"无法获取 {sym} 数据")
+            return
         logger.info(f"Loaded/Fetched {sym}: rows={len(k)}, range={k['datetime'].min()}..{k['datetime'].max()}")
+        return
+
+    if k is None or k.empty:
+        logger.warning(f"{source} 无法获取 {sym} 数据")
+        return
+
+    # 保存数据
+    from alpha101_factory.utils.io import write_parquet
+    from alpha101_factory.config import PARQ_DIR_KLINES, START_DATE, END_DATE, ADJUST
+    from alpha101_factory.data.loader import _resolve_kline_path
+    out = _resolve_kline_path(sym, args.start or START_DATE, args.end or END_DATE, adjust)
+    if "symbol" not in k.columns:
+        k.insert(0, "symbol", sym)
+    write_parquet(k, out)
+    logger.info(f"{source} 成功: {sym}, {len(k)} 行")
 
 def cmd_tmp(args):
     # if single stock specified, only build for that one
@@ -99,6 +130,8 @@ def main():
     p1a.add_argument("--start", default="", help="YYYYMMDD or empty")
     p1a.add_argument("--end", default="", help="YYYYMMDD or empty")
     p1a.add_argument("--adjust", default="", help="qfq/hfq/'' override")
+    p1a.add_argument("--source", default="auto", choices=["auto", "akshare", "baostock", "yfinance"],
+                     help="Data source: auto (fallback chain) or specific source")
     p1a.set_defaults(func=cmd_fetch_one)
 
     p2 = sub.add_parser("tmp", help="build tmp features")
