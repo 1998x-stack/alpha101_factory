@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpha101 Factory — 可插拔因子工厂文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base-dark.css">
+<style>
+:root {
+  --c1: #10b981; --c1d: #059669;
+  --c2: #6366f1; --c2d: #4f46e5;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --blue: #3b82f6;
+}
+.hero h1 em { background: linear-gradient(90deg, var(--c1), var(--c2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.stat-card:nth-child(1) { border-color: var(--c1); }
+.stat-card:nth-child(2) { border-color: var(--c2); }
+.stat-card:nth-child(3) { border-color: var(--amber); }
+.stat-card:nth-child(4) { border-color: var(--red); }
+.section-link { transition: all .2s; }
+.section-link:hover { transform: translateY(-2px); border-color: var(--c1); }
+.arch-flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 16px 0; }
+.arch-step { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 14px; font-family: var(--mono); white-space: nowrap; }
+.arch-step.active { border-color: var(--c1); background: rgba(16,185,129,.1); }
+.arch-arrow { color: var(--muted); font-size: 18px; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.feature-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.feature-card h4 { margin: 0 0 8px; font-size: 15px; }
+.feature-card p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.quick-link { display: block; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-decoration: none; color: var(--text); transition: all .2s; }
+.quick-link:hover { border-color: var(--c2); transform: translateY(-1px); }
+.quick-link .ql-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.quick-link .ql-desc { font-size: 12px; color: var(--muted); margin: 0; }
+.cmd-block { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-family: var(--mono); font-size: 13px; margin: 8px 0; overflow-x: auto; }
+.cmd-block .prompt { color: var(--c1); }
+@media(max-width:768px) {
+  .arch-flow { flex-direction: column; }
+  .arch-arrow { transform: rotate(90deg); }
+  .feature-grid, .quick-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<nav><div class="nav-inner">
+  <span class="nav-brand">Alpha101 <span>因子工厂</span></span>
+  <a class="nl" href="#overview">概览</a>
+  <a class="nl" href="#architecture">架构</a>
+  <a class="nl" href="#factors">因子</a>
+  <a class="nl" href="#data">数据</a>
+  <a class="nl" href="#quickstart">快速开始</a>
+  <a class="nl" href="https://github.com/1998x-stack/alpha101_factory" target="_blank">GitHub ↗</a>
+</div></nav>
+
+<div class="page">
+  <section class="hero">
+    <div class="hero-badge"><span class="dot" style="background:var(--c1)"></span>v0.2.0 · 2026-05-11</div>
+    <h1>Alpha101 <em>可插拔因子工厂</em></h1>
+    <p>基于 WorldQuant Alpha101 论文的 A 股日线量化研究工具 — 数据获取 → 特征缓存 → 因子计算 → 回测评估 → 可视化</p>
+    <div style="margin-top:20px">
+      <a href="#quickstart" class="btn" style="background:var(--c1);color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-right:8px">快速开始 →</a>
+      <a href="https://github.com/1998x-stack/alpha101_factory" class="btn" style="background:var(--bg3);color:var(--text);padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;border:1px solid var(--border)">GitHub 仓库</a>
+    </div>
+  </section>
+
+  <!-- Key Stats -->
+  <section class="section" id="overview">
+    <h2>📊 项目概览</h2>
+    <p class="lead">核心数字一目了然</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-value">61</div><div class="stat-label">Alpha 因子</div></div>
+      <div class="stat-card"><div class="stat-value">496</div><div class="stat-label">股票数据</div></div>
+      <div class="stat-card"><div class="stat-value">30</div><div class="stat-label">测试用例</div></div>
+      <div class="stat-card"><div class="stat-value">18</div><div class="stat-label">Bug 修复</div></div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section class="section" id="architecture">
+    <h2>🏗️ 系统架构</h2>
+    <p class="lead">五层流水线设计，每层职责清晰</p>
+    <div class="arch-flow">
+      <div class="arch-step active">📥 Data</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-step">🔄 Tmp</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-step active">🧮 Factor</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-step">📈 Backtest</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-step">🎨 Viz</div>
+    </div>
+
+    <div class="feature-grid" style="margin-top:20px">
+      <div class="feature-card">
+        <h4>📥 数据层</h4>
+        <p>AkShare 主源 + Baostock 备源，Parquet 本地缓存，增量更新机制</p>
+      </div>
+      <div class="feature-card">
+        <h4>🔄 特征缓存</h4>
+        <p>二段式设计：returns / vwap / advN 中间变量预计算，避免重复</p>
+      </div>
+      <div class="feature-card">
+        <h4>🧮 因子层</h4>
+        <p>@register 装饰器 + pkgutil 自动发现，新增因子零配置注册</p>
+      </div>
+      <div class="feature-card">
+        <h4>📈 回测层</h4>
+        <p>IC / RankIC 横截面 + 时间序列双维度，分位数组合 + 多空策略</p>
+      </div>
+      <div class="feature-card">
+        <h4>🎨 可视化</h4>
+        <p>Plotly 交互式图表：K线图、因子时序、截面分布、热力图</p>
+      </div>
+      <div class="feature-card">
+        <h4>⚡ 加速算子</h4>
+        <p>bottleneck / numba 可选加速，pandas 优雅回退，API 一致</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Factors -->
+  <section class="section" id="factors">
+    <h2>🧬 因子体系</h2>
+    <p class="lead">61 个已实现的 Alpha101 因子，覆盖动量、反转、量价、波动率</p>
+    <div class="compare-grid">
+      <div class="compare-card" style="border-color:var(--c1)">
+        <h4 style="color:var(--c1);margin:0 0 8px">✅ 已实现 (61)</h4>
+        <p style="margin:0;font-size:13px;color:var(--muted)">Alpha001~101 中 61 个因子，覆盖主流量价模式</p>
+      </div>
+      <div class="compare-card" style="border-color:var(--border)">
+        <h4 style="color:var(--muted);margin:0 0 8px">⬜ 待实现 (40)</h4>
+        <p style="margin:0;font-size:13px;color:var(--muted)">依赖行业/市值数据的因子，待扩展数据源</p>
+      </div>
+    </div>
+    <div class="block-q" style="margin-top:16px">
+      <p>"因子计算输出 MultiIndex Series [datetime, symbol]，直接对接回测引擎的因子输入格式。"</p>
+    </div>
+  </section>
+
+  <!-- Data Layer -->
+  <section class="section" id="data">
+    <h2>💾 数据层</h2>
+    <p class="lead">496 只 A 股日线数据，2020-01-02 至 2025-09-17</p>
+    <div class="chart">
+      <div class="chart-row"><div class="chart-label">K 线数据</div><div class="chart-bar-wrap"><div class="chart-bar green" style="width:100%">496 只 · 27.5 MB</div></div></div>
+      <div class="chart-row"><div class="chart-label">tmp 特征</div><div class="chart-bar-wrap"><div class="chart-bar blue" style="width:10%">51 只 · 23 列</div></div></div>
+      <div class="chart-row"><div class="chart-label">因子结果</div><div class="chart-bar-wrap"><div class="chart-bar purple" style="width:5%">1 个 (Alpha101)</div></div></div>
+      <div class="chart-row"><div class="chart-label">快照数据</div><div class="chart-bar-wrap"><div class="chart-bar amber" style="width:100%">5428 只 · 373 KB</div></div></div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section class="section" id="quickstart">
+    <h2>🚀 快速开始</h2>
+    <p class="lead">5 分钟上手，从安装到回测</p>
+    <div class="code-block" style="margin:12px 0">
+      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span style="margin-left:8px;color:var(--muted);font-size:12px">Terminal</span></div>
+      <pre style="margin:0;padding:12px;font-size:13px;line-height:1.6;overflow-x:auto"><span class="cm"># 1. 克隆 & 安装</span>
+git clone git@github.com:1998x-stack/alpha101_factory.git
+cd alpha101_factory
+pip install -e .
+
+<span class="cm"># 2. 获取数据</span>
+python -m alpha101_factory.cli fetch
+
+<span class="cm"># 3. 计算因子</span>
+python -m alpha101_factory.cli factor --factors Alpha001
+
+<span class="cm"># 4. 回测评估</span>
+python -m alpha101_factory.backtest.run_bt --alpha Alpha001 --horizon 1
+
+<span class="cm"># 5. 可视化</span>
+python -m alpha101_factory.cli visualize --all --prefix Alpha</pre>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Alpha101 Factory v0.2.0 · MIT License</p>
+    <p style="margin-top:4px"><a href="https://github.com/1998x-stack/alpha101_factory" style="color:var(--c1);text-decoration:none">GitHub →</a></p>
+  </footer>
+</div>
+</body>
+</html>
