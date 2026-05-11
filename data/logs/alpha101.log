@@ -10,3 +10,29 @@
 2025-09-18 14:23:05.780 | INFO     | alpha101_factory.utils.io:write_parquet:51 - 成功写入 Parquet 文件: /Users/mx/Desktop/Factory-Code/alpha101_factory/data/klines_daily/600000_20200101_20240101_qfq.parquet
 2025-09-18 14:23:08.469 | INFO     | alpha101_factory.viz.plots:save_fig:193 - 图像已保存至: /Users/mx/Desktop/Factory-Code/alpha101_factory/data/images/klines/600000_20200101_20240101_qfq.png
 2025-09-18 14:23:08.471 | INFO     | __main__:cmd_fetch_one:32 - Loaded/Fetched 600000: rows=970, range=2020-01-02 00:00:00..2023-12-29 00:00:00
+2026-03-31 10:23:51.485 | INFO     | alpha101_factory.data.loader:check_klines_integrity:266 - K线文件检查: 存在 495/5428; 空文件 4933
+2026-03-31 10:23:51.487 | INFO     | __main__:cmd_check:93 -    symbol  exists  rows   date_min   date_max                                                                                                       path
+0  430017    True  1102 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430017_20200101_20250917_qfq.parquet
+1  430047    True  1278 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430047_20200101_20250917_qfq.parquet
+2  430090    True  1069 2020-01-13 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430090_20200101_20250917_qfq.parquet
+3  430139    True  1298 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430139_20200101_20250917_qfq.parquet
+4  430198    True  1321 2020-01-03 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430198_20200101_20250917_qfq.parquet
+5  430300    True  1122 2020-01-03 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430300_20200101_20250917_qfq.parquet
+6  430418    True  1332 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430418_20200101_20250917_qfq.parquet
+7  430425    True   800 2020-02-18 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430425_20200101_20250917_qfq.parquet
+8  430476    True  1234 2020-01-06 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430476_20200101_20250917_qfq.parquet
+9  430478    True   987 2020-01-08 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430478_20200101_20250917_qfq.parquet
+2026-03-31 10:23:51.487 | INFO     | __main__:cmd_check:94 - exists=495 / total=5428; empty=4933
+2026-03-31 10:27:29.834 | INFO     | alpha101_factory.data.loader:check_klines_integrity:264 - K线文件检查: 存在 495/5428; 空文件 4933
+2026-03-31 10:27:29.835 | INFO     | __main__:cmd_check:93 -    symbol  exists  rows   date_min   date_max                                                                                                       path
+0  430017    True  1102 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430017_20200101_20250917_qfq.parquet
+1  430047    True  1278 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430047_20200101_20250917_qfq.parquet
+2  430090    True  1069 2020-01-13 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430090_20200101_20250917_qfq.parquet
+3  430139    True  1298 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430139_20200101_20250917_qfq.parquet
+4  430198    True  1321 2020-01-03 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430198_20200101_20250917_qfq.parquet
+5  430300    True  1122 2020-01-03 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430300_20200101_20250917_qfq.parquet
+6  430418    True  1332 2020-01-02 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430418_20200101_20250917_qfq.parquet
+7  430425    True   800 2020-02-18 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430425_20200101_20250917_qfq.parquet
+8  430476    True  1234 2020-01-06 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430476_20200101_20250917_qfq.parquet
+9  430478    True   987 2020-01-08 2025-09-17  /Users/xd/Desktop/codes/mygithubs/alpha101_factory/data/klines_daily/430478_20200101_20250917_qfq.parquet
+2026-03-31 10:27:29.836 | INFO     | __main__:cmd_check:94 - exists=495 / total=5428; empty=4933
