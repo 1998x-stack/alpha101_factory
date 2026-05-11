@@ -9,16 +9,8 @@
 
 适用于因子计算的前置步骤，确保数据输入完整可靠。
 """
-
-import sys
-from pathlib import Path
 from loguru import logger
 
-# 确保项目根目录加入 sys.path，便于模块导入
-try:
-    sys.path.append(str(Path(__file__).resolve().parents[2]))
-except Exception as e:
-    print(f"[警告] 无法设置 sys.path: {e}")
 
 
 from alpha101_factory.utils.log import setup_logger

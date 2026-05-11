@@ -103,8 +103,8 @@ def rolling_std(s: pd.Series, n: int) -> pd.Series:
 
 
 def rolling_cov(s1: pd.Series, s2: pd.Series, n: int) -> pd.Series:
-    """计算滚动窗口的协方差。"""
-    return s1.rolling(n, min_periods=n).cov(s2)
+    """计算滚动窗口的协方差（ddof=0，与 rolling_std 一致）。"""
+    return s1.rolling(n, min_periods=n).cov(s2, ddof=0)
 
 
 def rolling_corr(s1: pd.Series, s2: pd.Series, n: int) -> pd.Series:
@@ -190,16 +190,23 @@ if _NUMBA:
 
 
 def decay_linear(s: pd.Series, n: int) -> pd.Series:
-    """计算线性衰减加权平均，越新的值权重越大。"""
+    """计算线性衰减加权平均，越新的值权重越大。
+    
+    注意: 窗口内有任何 NaN 时返回 NaN，与 numba 版本保持一致。
+    """
     arr = s.to_numpy(dtype=float)
     try:
         if _NUMBA:
             return _as_series(_decay_linear(arr, n), s.index)
     except Exception:
         pass
+    # pandas 回退实现 — 严格检查窗口内无 NaN
     w = np.arange(1, n + 1, dtype=float)
     w /= w.sum()
-    return s.rolling(n, min_periods=n).apply(lambda x: np.dot(x, w), raw=True)
+    return s.rolling(n, min_periods=n).apply(
+        lambda x: np.nan if np.any(np.isnan(x)) else np.dot(x, w),
+        raw=True,
+    )
 
 
 # ============================================================================
@@ -247,7 +254,12 @@ def adv(volume: pd.Series, n: int) -> pd.Series:
 # 截面计算工具（同一时间点跨股票）
 # ============================================================================
 def cs_rank(s: pd.Series) -> pd.Series:
-    """截面分位数排名：对每个时间点上的股票进行排序。"""
+    """截面分位数排名：对每个时间点上的股票进行排序。
+    
+    注意: 输入 Series 必须有 MultiIndex (datetime, symbol)。
+    """
+    if not isinstance(s.index, pd.MultiIndex):
+        raise ValueError("cs_rank 需要 MultiIndex (datetime, symbol) 输入")
     return s.groupby(level=0).rank(pct=True)
 
 

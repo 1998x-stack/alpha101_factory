@@ -41,9 +41,12 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         df (pd.DataFrame): 待写入的数据表。
         path (Path): 输出文件路径。
 
+    Raises:
+        Exception: 若写入失败，重新抛出原始异常。
+
     Notes:
         - 自动创建父目录；
-        - 若写入失败会捕获异常并记录日志。
+        - 若写入失败会记录日志并重新抛出异常，确保调用方知情。
     """
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -51,3 +54,5 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         logger.info(f"成功写入 Parquet 文件: {path}")
     except Exception as e:
         logger.error(f"写入 Parquet 文件失败: {path}, 错误: {e}")
+        raise  # 重新抛出，让调用方知情
+        raise

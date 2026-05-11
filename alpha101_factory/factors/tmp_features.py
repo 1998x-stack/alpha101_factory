@@ -10,20 +10,11 @@
 该模块是因子计算的前置步骤，确保数据格式与必需字段齐全，
 并为后续因子计算提供高效的输入。
 """
-
-import sys
-from pathlib import Path
+from __future__ import annotations
 import pandas as pd
 from loguru import logger
 from tqdm import tqdm
 
-# 确保可以从项目根目录导入模块
-try:
-    sys.path.append(str(Path(__file__).resolve().parents[2]))
-except Exception as e:
-    raise RuntimeError("无法设置 sys.path，请检查项目目录结构") from e
-
-# 项目内部依赖
 from alpha101_factory.config import PARQ_DIR_KLINES, PARQ_DIR_TMP, START_DATE, END_DATE, ADJUST
 from alpha101_factory.utils.io import read_parquet, write_parquet
 from alpha101_factory.utils import ops

@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 """Alpha101 因子回测脚本.
 
+from __future__ import annotations
 本模块提供对指定因子进行横截面 IC/RankIC 分析、分位数组合回测，
 并将结果保存为图表和 CSV 文件。
 """
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-
 import argparse
 import numpy as np
 import pandas as pd
@@ -109,9 +106,10 @@ def main() -> None:
     if not port_df.empty:
         try:
             with np.errstate(invalid="ignore"):
-                cum = (1 + port_df.fillna(0)).cumprod()
+                # 不 fillna(0)，NaN 表示缺失而非零收益
+                cum = (1 + port_df).cumprod()
                 if not ls_df.empty and "LS" in ls_df.columns:
-                    cum["LS"] = (1 + ls_df["LS"].fillna(0)).cumprod()
+                    cum["LS"] = (1 + ls_df["LS"]).cumprod()
 
             fig_ports = px.line(
                 cum.reset_index(),

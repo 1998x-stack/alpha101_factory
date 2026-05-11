@@ -1,13 +1,11 @@
+from __future__ import annotations
 # -*- coding: utf-8 -*-
 """A股行情数据获取与管理模块.
 
 该模块封装了 A 股行情获取、数据归一化、图像保存、本地文件完整性检查等功能。
 默认优先使用 AkShare 获取数据，若失败则回退至 Baostock。
 """
-import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-
 from tqdm import tqdm
 from loguru import logger
 import pandas as pd
@@ -86,6 +84,10 @@ def normalize_k(df: pd.DataFrame) -> pd.DataFrame:
 
     # 字段重命名
     df = df.rename(columns={k: v for k, v in mapping.items() if k in df.columns})
+
+    # 移除冗余列 (如果 symbol 已存在，删除'股票代码')
+    if 'symbol' in df.columns and '股票代码' in df.columns:
+        df = df.drop(columns=['股票代码'])
 
     # 时间字段转换
     if "datetime" in df.columns:
@@ -317,3 +319,121 @@ if __name__ == '__main__':
     spot = fetch_spot()
     fetch_klines_from_spot(spot)
     check_klines_integrity()
+
+
+# ---------- 增量更新 ----------
+def update_kline_incremental(symbol: str, adjust: str = ADJUST) -> pd.DataFrame:
+    """增量更新单只股票的 K 线数据。
+
+    读取本地最新日期，只获取更新的数据并追加。
+
+    Args:
+        symbol (str): 股票代码。
+        adjust (str): 复权方式。
+
+    Returns:
+        pd.DataFrame: 更新后的完整 K 线数据，若无更新则返回本地数据。
+    """
+    sym = ''.join(filter(str.isdigit, symbol)) or symbol
+    out = _resolve_kline_path(sym, START_DATE if START_DATE else None,
+                              END_DATE if END_DATE else None, adjust)
+
+    if not out.exists():
+        # 无本地数据，全量获取
+        logger.info(f"无本地数据，全量获取 {sym}")
+        return load_or_fetch_symbol(sym, START_DATE, END_DATE, adjust)
+
+    # 读取本地数据
+    df_local = read_parquet(out)
+    if df_local.empty:
+        return load_or_fetch_symbol(sym, START_DATE, END_DATE, adjust)
+
+    # 获取本地最新日期
+    last_date = pd.to_datetime(df_local["datetime"]).max()
+    # 从下一天开始增量获取
+    next_date = last_date + pd.Timedelta(days=1)
+    start_str = next_date.strftime("%Y%m%d")
+    end_str = pd.Timestamp.today().strftime("%Y%m%d")
+
+    logger.info(f"增量更新 {sym}: {start_str} ~ {end_str}")
+
+    try:
+        df_new = _fetch_kline_fallback(sym, start_str, end_str, adjust)
+        if df_new is not None and not df_new.empty:
+            if "symbol" not in df_new.columns:
+                df_new.insert(0, "symbol", sym)
+            # 合并并去重
+            df_combined = pd.concat([df_local, df_new], ignore_index=True)
+            df_combined = df_combined.drop_duplicates(subset=["datetime"], keep="last")
+            df_combined = df_combined.sort_values("datetime").reset_index(drop=True)
+            write_parquet(df_combined, out)
+            logger.info(f"增量更新完成 {sym}: 新增 {len(df_new)} 行，共 {len(df_combined)} 行")
+            return df_combined
+        else:
+            logger.info(f"无新数据 {sym}")
+            return df_local
+    except Exception as e:
+        logger.error(f"增量更新失败 {sym}: {e}")
+        return df_local
+
+
+# ---------- 数据质量检查 ----------
+def check_data_quality(df: pd.DataFrame, symbol: str = "") -> dict:
+    """检查 K 线数据质量。
+
+    Args:
+        df (pd.DataFrame): K 线数据。
+        symbol (str): 股票代码（用于日志）。
+
+    Returns:
+        dict: 质量检查报告。
+    """
+    report = {
+        "symbol": symbol,
+        "rows": len(df),
+        "date_range": None,
+        "missing": {},
+        "gaps": 0,
+        "anomalies": [],
+        "quality_score": 100,
+    }
+
+    if df.empty:
+        report["quality_score"] = 0
+        return report
+
+    # 日期范围
+    report["date_range"] = (str(df["datetime"].min()), str(df["datetime"].max()))
+
+    # 缺失值检查
+    for col in ["open", "high", "low", "close", "volume"]:
+        if col in df.columns:
+            missing = df[col].isnull().sum()
+            if missing > 0:
+                report["missing"][col] = int(missing)
+
+    # 连续性检查（交易日间隙）
+    if len(df) > 1:
+        dates = pd.to_datetime(df["datetime"]).sort_values()
+        diffs = dates.diff().dt.days
+        # 正常交易间隔应 <= 3 天（跨周末）
+        gaps = (diffs > 3).sum()
+        report["gaps"] = int(gaps)
+
+    # 异常值检查
+    if "close" in df.columns and "volume" in df.columns:
+        # 价格为 0 或负
+        zero_price = (df["close"] <= 0).sum()
+        if zero_price > 0:
+            report["anomalies"].append(f"{zero_price} 条记录价格<=0")
+
+        # 成交量为负
+        neg_vol = (df["volume"] < 0).sum()
+        if neg_vol > 0:
+            report["anomalies"].append(f"{neg_vol} 条记录成交量<0")
+
+    # 质量评分
+    penalty = sum(report["missing"].values()) * 2 + report["gaps"] * 5 + len(report["anomalies"]) * 10
+    report["quality_score"] = max(0, 100 - penalty)
+
+    return report

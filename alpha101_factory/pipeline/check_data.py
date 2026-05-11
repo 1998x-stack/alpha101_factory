@@ -9,16 +9,8 @@ K线数据完整性检查脚本
 
 适用于数据预处理与质量监控，确保回测因子所需的 K线数据完整可靠。
 """
-
-import sys
-from pathlib import Path
 from loguru import logger
 
-# 确保项目根目录加入 sys.path，便于模块导入
-try:
-    sys.path.append(str(Path(__file__).resolve().parents[2]))
-except Exception as e:
-    print(f"[警告] 无法设置 sys.path: {e}")
 
 # 项目内部依赖
 from alpha101_factory.utils.log import setup_logger

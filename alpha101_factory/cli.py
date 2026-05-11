@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
-import sys
-from pathlib import Path
 from loguru import logger
 
-# 确保项目根目录加入 sys.path，便于模块导入
-try:
-    sys.path.append(str(Path(__file__).resolve().parents[1]))
-except Exception as e:
-    print(f"[警告] 无法设置 sys.path: {e}")
 
 import argparse
 from alpha101_factory.utils.log import setup_logger

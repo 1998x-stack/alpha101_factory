@@ -59,12 +59,12 @@ def _load_join(symbols: Optional[List[str]]) -> pd.DataFrame:
             if k.empty or t.empty:
                 continue
 
-            # 外连接合并，保留所有信息
+            # inner merge on key columns — 避免冗余比较和 NaN 引入
             m = pd.merge(
                 k,
                 t,
-                on=["symbol", "datetime", "open", "high", "low", "close", "volume", "amount"],
-                how="outer",
+                on=["symbol", "datetime"],
+                how="inner",
                 sort=True,
             )
             dfs.append(m)

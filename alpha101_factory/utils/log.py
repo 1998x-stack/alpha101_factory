@@ -10,10 +10,6 @@
 
 适用于量化研究与回测框架中的统一日志管理。
 """
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-
 from loguru import logger
 from alpha101_factory.config import LOG_DIR
 

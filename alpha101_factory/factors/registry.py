@@ -10,23 +10,11 @@
 
 该设计有助于实现因子库的模块化与可扩展性，便于在回测框架中动态调用。
 """
-
-import sys
-from pathlib import Path
 from typing import Dict, Type
 import importlib
 import pkgutil
 
-try:
-    # 将项目根目录添加到 sys.path，确保跨目录调用时能正确导入
-    sys.path.append(str(Path(__file__).resolve().parents[2]))
-except Exception as e:
-    raise RuntimeError("无法设置项目路径，请检查目录结构是否正确") from e
-
-try:
-    from alpha101_factory.factors.base import Factor
-except ImportError as e:
-    raise ImportError("无法导入 Factor 基类，请确认 alpha101_factory.factors.base 是否存在") from e
+from alpha101_factory.factors.base import Factor
 
 
 # ===== 全局注册表 =====
@@ -111,7 +99,7 @@ def get_factor(name: str) -> Type[Factor]:
     return _REGISTRY[name]
 
 
-def list_factors() -> list[str]:
+def list_factors() -> "list[str]":
     """列出所有已注册的因子名称。
 
     Returns:

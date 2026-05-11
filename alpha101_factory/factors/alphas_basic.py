@@ -5,10 +5,6 @@ Alpha101因子库基础实现模块。
 本模块包含Alpha101因子库中基础因子的实现，包括工具函数和各个Alpha因子的具体计算逻辑。
 所有因子都继承自Factor基类，并通过装饰器注册到因子注册表中。
 """
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-
 import numpy as np
 import pandas as pd
 from alpha101_factory.factors.base import Factor
@@ -20,37 +16,14 @@ def _cs_rank(df: pd.DataFrame, s: pd.Series) -> pd.Series:
     """
     计算截面排名。
     
-    对给定的Series按时间截面进行排名计算，返回百分位排名。
+    ⚠️ GOTCHA: 这个函数有 bug! MultiIndex.from_frame 创建的新索引
+    导致 groupby(level=0) 每组只有一行，rank(pct=True) 永远返回 1.0。
+    请使用 ops.cs_rank 替代。
     
-    Args:
-        df: 包含datetime和symbol列的DataFrame
-        s: 需要计算排名的Series
-        
-    Returns:
-        按时间截面排名的Series，值为0-1之间的百分位排名
-        
-    Raises:
-        KeyError: 当DataFrame中缺少必要的datetime或symbol列时
-        ValueError: 当输入数据格式不正确时
+    @deprecated 使用 ops.cs_rank 代替
     """
-    try:
-        if not isinstance(df, pd.DataFrame):
-            raise ValueError("df必须是pandas DataFrame")
-        if not isinstance(s, pd.Series):
-            raise ValueError("s必须是pandas Series")
-            
-        # 检查必要的列是否存在
-        required_cols = ["datetime", "symbol"]
-        missing_cols = [col for col in required_cols if col not in df.columns]
-        if missing_cols:
-            raise KeyError(f"DataFrame缺少必要的列: {missing_cols}")
-            
-        idx = pd.MultiIndex.from_frame(df[required_cols], names=required_cols)
-        s_indexed = pd.Series(s.values, index=idx)
-        return s_indexed.groupby(level=0).rank(pct=True)
-        
-    except Exception as e:
-        raise RuntimeError(f"计算截面排名时发生错误: {str(e)}") from e
+    # 委托给正确的实现
+    return ops.cs_rank(s)
 
 
 def _g(df: pd.DataFrame, col: str, fn, *args):
@@ -184,11 +157,15 @@ class Alpha003(Factor):
             if missing_cols:
                 raise KeyError(f"DataFrame缺少必要的列: {missing_cols}")
             
-            val = -_g(df, "open", 
-                     lambda s: ops.rolling_corr(
-                         ops.cs_rank(s), 
-                         ops.cs_rank(df.loc[s.index, "volume"]), 
-                         10))
+            df_mi = df.set_index(["datetime","symbol"])
+            rank_open = ops.cs_rank(df_mi["open"])
+            rank_vol = ops.cs_rank(df_mi["volume"])
+            # Add rank columns to df for _g to use per-symbol
+            df = df.copy()
+            df["_rank_open"] = rank_open.values
+            df["_rank_vol"] = rank_vol.values
+            val = -_g(df, "_rank_open", 
+                      lambda s: ops.rolling_corr(s, df.loc[s.index, "_rank_vol"], 10))
             
             return Factor.as_cs_series(df, val)
             
@@ -228,8 +205,9 @@ class Alpha004(Factor):
             if missing_cols:
                 raise KeyError(f"DataFrame缺少必要的列: {missing_cols}")
             
-            val = -_g(df, "low", 
-                     lambda s: ops.ts_rank(ops.cs_rank(s), 9))
+            df = df.copy()
+            df["_rank_low"] = ops.cs_rank(df.set_index(["datetime","symbol"])["low"]).values
+            val = - _g(df, "_rank_low", lambda s: ops.ts_rank(s, 9))
             
             return Factor.as_cs_series(df, val)
             
@@ -372,8 +350,8 @@ class Alpha009(Factor):
             
             # 根据趋势方向决定因子值
             val = np.where(cond1, d1, np.where(cond2, d1, -d1))
-            
-            return Factor.as_cs_series(df, pd.Series(val))
+
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
             
         except Exception as e:
             raise RuntimeError(f"计算Alpha009因子时发生错误: {str(e)}") from e
@@ -424,7 +402,8 @@ class Alpha010(Factor):
                        lambda s: ops.rolling_max(ops.delta(s, 1), 4)) < 0
             
             # 根据趋势方向决定因子值并进行截面排名
-            val = ops.cs_rank(np.where(cond1, d1, np.where(cond2, d1, -d1)))
+            val_arr = np.where(cond1, d1, np.where(cond2, d1, -d1))
+            val = ops.cs_rank(pd.Series(val_arr, index=df.set_index(["datetime","symbol"]).index))
             
             return Factor.as_cs_series(df, val)
             
@@ -521,7 +500,7 @@ class Alpha012(Factor):
             val = (np.sign(_g(df, "volume", ops.delta, 1)) * 
                    (-_g(df, "close", ops.delta, 1)))
             
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
             
         except Exception as e:
             raise RuntimeError(f"计算Alpha012因子时发生错误: {str(e)}") from e
@@ -559,10 +538,16 @@ class Alpha013(Factor):
             if missing_cols:
                 raise KeyError(f"DataFrame缺少必要的列: {missing_cols}")
             
-            val = -_g(df, "close", 
+            df_mi_13 = df.set_index(["datetime","symbol"])
+            rank_open_13 = ops.cs_rank(df_mi_13["open"])
+            rank_vol_13 = ops.cs_rank(df_mi_13["volume"])
+            df = df.copy()
+            df["_rank_open"] = rank_open_13.values
+            df["_rank_vol"] = rank_vol_13.values
+            val = -_g(df, "_rank_open", 
                       lambda s: ops.rolling_cov(
-                          ops.cs_rank(s), 
-                          ops.cs_rank(df.loc[s.index, "volume"]), 
+                          s, 
+                          df.loc[s.index, "_rank_vol"], 
                           5))
             
             return Factor.as_cs_series(df, val)
@@ -649,10 +634,16 @@ class Alpha016(Factor):
             if missing_cols:
                 raise KeyError(f"DataFrame缺少必要的列: {missing_cols}")
             
-            val = -_g(df, "high", 
+            df_mi_16 = df.set_index(["datetime","symbol"])
+            rank_high_16 = ops.cs_rank(df_mi_16["high"])
+            rank_vol_16 = ops.cs_rank(df_mi_16["volume"])
+            df = df.copy()
+            df["_rank_high"] = rank_high_16.values
+            df["_rank_vol"] = rank_vol_16.values
+            val = -_g(df, "_rank_high", 
                       lambda s: ops.rolling_cov(
-                          ops.cs_rank(s), 
-                          ops.cs_rank(df.loc[s.index, "volume"]), 
+                          s, 
+                          df.loc[s.index, "_rank_vol"], 
                           5))
             
             return Factor.as_cs_series(df, val)
@@ -754,7 +745,7 @@ class Alpha019(Factor):
             # 组合计算因子值
             val = -np.sign(price_change) * (1 + returns_sum_rank)
             
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
             
         except Exception as e:
             raise RuntimeError(f"计算Alpha019因子时发生错误: {str(e)}") from e
@@ -862,7 +853,7 @@ class Alpha021(Factor):
             # 根据条件决定因子值
             val = np.where(cond != 0, cond, cond2)
             
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
             
         except Exception as e:
             raise RuntimeError(f"计算Alpha021因子时发生错误: {str(e)}") from e
@@ -901,11 +892,11 @@ class Alpha022(Factor):
                 raise KeyError(f"DataFrame缺少必要的列: {missing_cols}")
             
             # 最高价与成交量的5期滚动相关系数
-            corr = _g(df, "high", 
+            corr = _g(df, "high",
                       lambda s: ops.rolling_corr(s, df.loc[s.index, "volume"], 5))
-            
+
             # 相关系数的5期变化
-            corr_delta = _g(df, None, lambda *_: ops.delta(corr, 5))
+            corr_delta = ops.delta(corr, 5)
             
             # 收盘价20期滚动标准差的截面排名
             close_std_rank = ops.cs_rank(_g(df, "close", ops.rolling_std, 20))
@@ -959,7 +950,7 @@ class Alpha023(Factor):
             # 根据条件决定因子值
             val = np.where(cond, -_g(df, "high", ops.delta, 2), 0)
             
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
             
         except Exception as e:
             raise RuntimeError(f"计算Alpha023因子时发生错误: {str(e)}") from e
@@ -1048,8 +1039,7 @@ class Alpha026(Factor):
             b = _g(df, "high", lambda s: ops.ts_rank(s, 5))
             
             # 计算相关系数的3期滚动最大值
-            val = -_g(df, None, 
-                      lambda *_: ops.rolling_max(ops.rolling_corr(a, b, 5), 3))
+            val = - ops.rolling_max(ops.rolling_corr(a, b, 5), 3)
             
             return Factor.as_cs_series(df, val)
             
@@ -1178,8 +1168,7 @@ class Alpha035(Factor):
             a = _g(df, "volume", lambda s: ops.ts_rank(s, 32))
             
             # 价格区间16期时间序列排名
-            b = 1 - _g(df, None, 
-                       lambda *_: ops.ts_rank(((df["close"] + df["high"]) - df["low"]), 16))
+            b = 1 - ops.ts_rank((df["close"] + df["high"]) - df["low"], 16)
             
             # 收益率32期时间序列排名
             c = 1 - _g(df, "returns", lambda s: ops.ts_rank(s, 32))
@@ -1321,7 +1310,7 @@ class Alpha043(Factor):
     收盘价7期负变化的8期时间序列排名相乘。
     """
     name = "Alpha043"
-    requires = ["volume","close","returns","vwap"]
+    requires = ["volume","close"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
         """
         计算Alpha043因子值。
@@ -1334,7 +1323,7 @@ class Alpha043(Factor):
         """
         try:
             adv20 = _g(df,"volume", lambda s: ops.adv(s, 20))
-            val = _g(df, None, lambda *_: ops.ts_rank(df["volume"]/adv20, 20)) * _g(df,"close", lambda s: ops.ts_rank(- ops.delta(s,7), 8))
+            val = ops.ts_rank(df["volume"]/adv20, 20) * _g(df,"close", lambda s: ops.ts_rank(- ops.delta(s,7), 8))
             return Factor.as_cs_series(df, val)
         except Exception as e:
             raise RuntimeError(f"计算Alpha043因子时发生错误: {str(e)}") from e
@@ -1390,7 +1379,7 @@ class Alpha046(Factor):
         try:
             a = (_g(df,"close", ops.delay,20) - _g(df,"close", ops.delay,10))/10 - (_g(df,"close", ops.delay,10) - df["close"])/10
             val = np.where(a > 0.25, -1, np.where(a < 0, 1, -1*(df["close"] - _g(df,"close", ops.delay,1))))
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
         except Exception as e:
             raise RuntimeError(f"计算Alpha046因子时发生错误: {str(e)}") from e
 
@@ -1416,7 +1405,7 @@ class Alpha049(Factor):
         try:
             a = (_g(df,"close", ops.delay,20) - _g(df,"close", ops.delay,10))/10 - (_g(df,"close", ops.delay,10) - df["close"])/10
             val = np.where(a < -0.1, 1, -1*(df["close"] - _g(df,"close", ops.delay,1)))
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
         except Exception as e:
             raise RuntimeError(f"计算Alpha049因子时发生错误: {str(e)}") from e
 
@@ -1440,8 +1429,12 @@ class Alpha050(Factor):
             因子值的Series
         """
         try:
-            val = - _g(df, None, lambda *_: ops.rolling_max(
-                ops.cs_rank(_g(df,"volume", lambda s: ops.rolling_corr(ops.cs_rank(s), ops.cs_rank(df.loc[s.index,"vwap"]), 5))), 5))
+            rank_vwap = ops.cs_rank(df.set_index(["datetime","symbol"])["vwap"])
+            def _corr_vol_vwap(s):
+                rank_vol = ops.cs_rank(df.set_index(["datetime","symbol"])["volume"])
+                return ops.rolling_corr(rank_vol, rank_vwap, 5)
+            val = - ops.rolling_max(
+                ops.cs_rank(_g(df,"volume", _corr_vol_vwap)), 5)
             return Factor.as_cs_series(df, val)
         except Exception as e:
             raise RuntimeError(f"计算Alpha050因子时发生错误: {str(e)}") from e
@@ -1468,7 +1461,7 @@ class Alpha051(Factor):
         try:
             a = (_g(df,"close", ops.delay,20) - _g(df,"close", ops.delay,10))/10 - (_g(df,"close", ops.delay,10) - df["close"])/10
             val = np.where(a < -0.05, 1, -1*(df["close"] - _g(df,"close", ops.delay,1)))
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
         except Exception as e:
             raise RuntimeError(f"计算Alpha051因子时发生错误: {str(e)}") from e
 
@@ -1518,8 +1511,8 @@ class Alpha053(Factor):
             因子值的Series
         """
         try:
-            x = ((df["close"] - df["low"]) - (df["high"] - df["close"])) / (df["close"] - df["low"]).replace(0,np.nan)
-            val = - _g(df, None, lambda *_: ops.delta(x, 9))
+            x = ((df["close"] - df["low"]) - (df["high"] - df["close"])) / (df["high"] - df["low"]).replace(0,np.nan)
+            val = - ops.delta(x, 9)
             return Factor.as_cs_series(df, val)
         except Exception as e:
             raise RuntimeError(f"计算Alpha053因子时发生错误: {str(e)}") from e
@@ -1545,7 +1538,7 @@ class Alpha055(Factor):
         """
         try:
             num = (df["close"] - _g(df,"low", lambda s: ops.rolling_min(s,12))) / (_g(df,"high", lambda s: ops.rolling_max(s,12)) - _g(df,"low", lambda s: ops.rolling_min(s,12))).replace(0,np.nan)
-            val = - _g(df, None, lambda *_: ops.rolling_corr(ops.cs_rank(num), ops.cs_rank(df["volume"]), 6))
+            val = - ops.rolling_corr(ops.cs_rank(num), ops.cs_rank(df["volume"]), 6)
             return Factor.as_cs_series(df, val)
         except Exception as e:
             raise RuntimeError(f"计算Alpha055因子时发生错误: {str(e)}") from e
@@ -1627,7 +1620,7 @@ class Alpha024(Factor):
             cond = (d <= 0.05)
             val = np.where(cond, - (df["close"] - _g(df,"close", ops.rolling_min, 100)),
                                   - _g(df,"close", ops.delta, 3))
-            return Factor.as_cs_series(df, pd.Series(val))
+            return Factor.as_cs_series(df, pd.Series(val, index=df.index))
         except Exception as e:
             raise RuntimeError(f"计算Alpha024因子时发生错误: {str(e)}") from e
 
@@ -1721,10 +1714,10 @@ class Alpha036(Factor):
     name = "Alpha036"
     requires = ["close","open","volume","vwap","returns"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
-        a = 2.21 * ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(df["close"]-df["open"], _g(df,"volume", ops.delay,1), 15)))
+        a = 2.21 * ops.cs_rank(ops.rolling_corr(df["close"]-df["open"], _g(df,"volume", ops.delay,1), 15))
         b = 0.7 * ops.cs_rank(df["open"] - df["close"])
-        c = 0.73 * ops.cs_rank(_g(df, None, lambda *_: ops.ts_rank(ops.delay(-df["returns"],6), 5)))
-        d = ops.cs_rank(np.abs(_g(df, None, lambda *_: ops.rolling_corr(df["vwap"], _g(df,"volume", lambda s: ops.adv(s,20)), 6))))
+        c = 0.73 * ops.cs_rank(ops.ts_rank(ops.delay(-df["returns"],6), 5))
+        d = ops.cs_rank(np.abs(ops.rolling_corr(df["vwap"], _g(df,"volume", lambda s: ops.adv(s,20)), 6)))
         e = 0.6 * ops.cs_rank((_g(df,"close", lambda s: ops.rolling_sum(s,200)/200) - df["open"]) * (df["close"] - df["open"]))
         val = a + b + c + d + e
         return Factor.as_cs_series(df, val)
@@ -1734,7 +1727,7 @@ class Alpha037(Factor):
     name = "Alpha037"
     requires = ["open","close"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
-        a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(ops.delay(df["open"]-df["close"],1), df["close"], 200)))
+        a = ops.cs_rank(ops.rolling_corr(ops.delay(df["open"]-df["close"],1), df["close"], 200))
         b = ops.cs_rank(df["open"] - df["close"])
         return Factor.as_cs_series(df, a + b)
 
@@ -1782,7 +1775,7 @@ class Alpha061(Factor):
     def compute(self, df: pd.DataFrame) -> pd.Series:
         adv180 = _g(df,"volume", lambda s: ops.adv(s,180))
         a = ops.cs_rank(df["vwap"] - _g(df,"vwap", lambda s: ops.rolling_min(s, int(16.1219))))
-        b = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(df["vwap"], adv180, int(17.9282))))
+        b = ops.cs_rank(ops.rolling_corr(df["vwap"], adv180, int(17.9282)))
         val = (a < b).astype(float)
         return Factor.as_cs_series(df, val)
 
@@ -1791,8 +1784,8 @@ class Alpha064(Factor):
     name = "Alpha064"
     requires = ["open","low","high","vwap","volume"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
-        a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr((_g(df,"open", lambda s: 0.178404*s) + (df["low"]*(1-0.178404))), _g(df,"volume", lambda s: ops.adv(s,120)), int(16.6208))))
-        b = ops.cs_rank(_g(df, None, lambda *_: ops.delta((((df["high"]+df["low"])/2)*0.178404 + df["vwap"]*(1-0.178404)), int(3.69741))))
+        a = ops.cs_rank(ops.rolling_corr((_g(df,"open", lambda s: 0.178404*s) + (df["low"]*(1-0.178404))), _g(df,"volume", lambda s: ops.adv(s,120)), int(16.6208)))
+        b = ops.cs_rank(ops.delta((((df["high"]+df["low"])/2)*0.178404 + df["vwap"]*(1-0.178404)), int(3.69741)))
         val = (a < b).astype(float) * -1
         return Factor.as_cs_series(df, val)
 
@@ -1805,7 +1798,7 @@ class Alpha065(Factor):
     与开盘价相对近期低点的排名大小关系，取小于关系的负号。
     """
     name = "Alpha065"
-    requires = ["open","vwap","low"]
+    requires = ["open","vwap","volume"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
         """
         计算Alpha065因子值。
@@ -1817,7 +1810,7 @@ class Alpha065(Factor):
             因子值的Series
         """
         try:
-            a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(0.00817205*df["open"] + (1-0.00817205)*df["vwap"], _g(df,"volume", lambda s: ops.adv(s,60)), int(6.40374))))
+            a = ops.cs_rank(ops.rolling_corr(0.00817205*df["open"] + (1-0.00817205)*df["vwap"], _g(df,"volume", lambda s: ops.adv(s,60)), int(6.40374)))
             b = ops.cs_rank(df["open"] - _g(df,"open", lambda s: ops.rolling_min(s, int(13.635))))
             val = (a < b).astype(float) * -1
             return Factor.as_cs_series(df, val)
@@ -1832,7 +1825,7 @@ class Alpha071(Factor):
     取两个复杂衰减与排名项的逐点最大值。
     """
     name = "Alpha071"
-    requires = ["close","volume","low","open","vwap"]
+    requires = ["close","low","open","vwap"]
     def compute(self, df: pd.DataFrame) -> pd.Series:
         """
         计算Alpha071因子值。
@@ -1844,8 +1837,8 @@ class Alpha071(Factor):
             因子值的Series
         """
         try:
-            a = _g(df, None, lambda *_: ops.ts_rank(ops.decay_linear(_g(df,"close", lambda s: ops.ts_rank(s, int(3.43976))), int(4.20501)), int(15.6948)))
-            b = _g(df, None, lambda *_: ops.ts_rank(ops.decay_linear(ops.cs_rank(((df["low"]+df["open"])-(df["vwap"]+df["vwap"]))**2), int(16.4662)), int(4.4388)))
+            a = ops.ts_rank(ops.decay_linear(_g(df,"close", lambda s: ops.ts_rank(s, int(3.43976)), int(4.20501)), int(15.6948)))
+            b = ops.ts_rank(ops.decay_linear(ops.cs_rank(((df["low"]+df["open"])-(df["vwap"]+df["vwap"]))**2), int(16.4662)), int(4.4388))
             val = np.maximum(a, b)
             return Factor.as_cs_series(df, val)
         except Exception as e:
@@ -1924,8 +1917,8 @@ class Alpha085(Factor):
             因子值的Series
         """
         try:
-            a = _g(df, None, lambda *_: ops.rolling_corr(0.876703*df["high"] + (1-0.876703)*df["close"], _g(df,"volume", lambda s: ops.adv(s,30)), int(9.61331)))
-            b = _g(df, None, lambda *_: ops.rolling_corr(_g(df,"close", lambda s: ops.ts_rank((df["high"]+df["low"])/2, int(3.70596))), _g(df,"volume", lambda s: ops.ts_rank(df["volume"], int(10.1595))), int(7.11408)))
+            a = ops.rolling_corr(0.876703*df["high"] + (1-0.876703)*df["close"], _g(df,"volume", lambda s: ops.adv(s,30)), int(9.61331))
+            b = ops.rolling_corr(_g(df,"close", lambda s: ops.ts_rank((df["high"]+df["low"])/2, int(3.70596))), _g(df,"volume", lambda s: ops.ts_rank(df["volume"], int(10.1595))), int(7.11408))
             val = ops.cs_rank(a) ** ops.cs_rank(b)
             return Factor.as_cs_series(df, val)
         except Exception as e:
@@ -1981,7 +1974,7 @@ class Alpha094(Factor):
         try:
             adv60 = _g(df,"volume", lambda s: ops.adv(s,60))
             a = ops.cs_rank(df["vwap"] - _g(df,"vwap", lambda s: ops.rolling_min(s, int(11.5783))))
-            b = _g(df, None, lambda *_: ops.ts_rank(ops.rolling_corr(_g(df,"vwap", lambda s: ops.ts_rank(s, int(19.6462))),
+            b = ops.ts_rank(ops.rolling_corr(_g(df,"vwap", lambda s: ops.ts_rank(s, int(19.6462)),
                                                                      _g(df,"volume", lambda s: ops.ts_rank(adv60, int(4.02992))), int(18.0926)), int(2.70756)))
             val = (a ** b) * -1
             return Factor.as_cs_series(df, val)
@@ -2008,8 +2001,8 @@ class Alpha095(Factor):
             因子值的Series
         """
         try:
-            a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(_g(df,"close", lambda s: ops.rolling_sum((df["high"]+df["low"])/2, int(19.1351))),
-                                                                     _g(df,"volume", lambda s: ops.adv(s,40)), int(12.8742))) ** 5)
+            a = ops.cs_rank(ops.rolling_corr(_g(df,"close", lambda s: ops.rolling_sum((df["high"]+df["low"])/2, int(19.1351))),
+                                                                     _g(df,"volume", lambda s: ops.adv(s,40)), int(12.8742)) ** 5)
             b = ops.cs_rank(df["open"] - _g(df,"open", lambda s: ops.rolling_min(s, int(12.4105))))
             val = (b < a).astype(float)
             return Factor.as_cs_series(df, val)
@@ -2036,8 +2029,15 @@ class Alpha096(Factor):
             因子值的Series
         """
         try:
-            a = _g(df, None, lambda *_: ops.ts_rank(ops.decay_linear(ops.rolling_corr(ops.cs_rank(df["vwap"]), ops.cs_rank(df["volume"]), int(3.83878)), int(4.16783)), int(8.38151)))
-            b = _g(df, None, lambda *_: ops.ts_rank(ops.decay_linear(ops.ts_rank(_g(df,"close", lambda s: ops.rolling_corr(ops.cs_rank(s), _g(df,"volume", lambda s2: ops.adv(s2,60)), int(4.13242))), int(7.45404)), int(14.0365)), int(13.4143)))
+            a = ops.ts_rank(ops.decay_linear(ops.rolling_corr(ops.cs_rank(df["vwap"]), ops.cs_rank(df["volume"]), int(3.83878)), int(4.16783)), int(8.38151))
+            df_mi_96 = df.set_index(["datetime","symbol"])
+            rank_close_96 = ops.cs_rank(df_mi_96["close"])
+            adv60_96 = _g(df,"volume", lambda s: ops.adv(s,60))
+            df = df.copy()
+            df["_rank_close"] = rank_close_96.values
+            b = ops.ts_rank(ops.decay_linear(ops.ts_rank(
+                _g(df, "_rank_close", lambda s: ops.rolling_corr(s, adv60_96, int(4.13242))), 
+                int(7.45404)), int(14.0365)), int(13.4143))
             val = - np.maximum(a, b)
             return Factor.as_cs_series(df, val)
         except Exception as e:
@@ -2065,8 +2065,8 @@ class Alpha098(Factor):
         """
         try:
             adv5 = _g(df,"volume", lambda s: ops.adv(s,5))
-            a = ops.cs_rank(_g(df, None, lambda *_: ops.rolling_corr(df["vwap"], _g(df,"volume", lambda s: ops.rolling_sum(adv5, int(26.4719))), int(4.58418))))
-            b = _g(df, None, lambda *_: ops.ts_rank(ops.ts_rank(ops.argmin(ops.rolling_corr(ops.cs_rank(df["open"]), _g(df,"volume", lambda s: ops.adv(s,15)), int(20.8187)), int(6.95668)), int(6.95668)), int(8.07206)))
+            a = ops.cs_rank(ops.rolling_corr(df["vwap"], _g(df,"volume", lambda s: ops.rolling_sum(adv5, int(26.4719))), int(4.58418)))
+            b = ops.ts_rank(ops.ts_rank(ops.argmin(ops.rolling_corr(ops.cs_rank(df["open"]), _g(df,"volume", lambda s: ops.adv(s,15)), int(20.8187)), int(6.95668)), int(6.95668)), int(8.07206))
             val = a - b
             return Factor.as_cs_series(df, val)
         except Exception as e:
@@ -2092,8 +2092,8 @@ class Alpha099(Factor):
             因子值的Series
         """
         try:
-            a = _g(df, None, lambda *_: ops.rolling_corr(_g(df,"close", lambda s: ops.rolling_sum((df["high"]+df["low"])/2, int(19.8975))), _g(df,"volume", lambda s: ops.adv(s,60)), int(8.8136)))
-            b = _g(df, None, lambda *_: ops.rolling_corr(df["low"], df["volume"], int(6.28259)))
+            a = ops.rolling_corr(_g(df,"close", lambda s: ops.rolling_sum((df["high"]+df["low"])/2, int(19.8975))), _g(df,"volume", lambda s: ops.adv(s,60)), int(8.8136))
+            b = ops.rolling_corr(df["low"], df["volume"], int(6.28259))
             val = (ops.cs_rank(a) < ops.cs_rank(b)).astype(float) * -1
             return Factor.as_cs_series(df, val)
         except Exception as e:

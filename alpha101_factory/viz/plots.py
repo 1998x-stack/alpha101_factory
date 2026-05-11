@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 可视化工具模块
+from __future__ import annotations
 
 本模块提供常见的量化研究可视化函数，包括：
 1. K线图绘制；

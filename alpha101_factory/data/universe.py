@@ -3,11 +3,6 @@
 
 从本地存储的 A 股快照文件中加载股票代码，用于构建投资组合或回测。
 """
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-
-
 import pandas as pd
 from alpha101_factory.config import PARQ_DIR_SPOT
 from alpha101_factory.utils.io import read_parquet

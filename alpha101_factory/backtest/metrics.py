@@ -211,9 +211,12 @@ def quantile_portfolios(factor_df: pd.DataFrame, price_df: pd.DataFrame,
         port_pivot.columns = [f"Q{c}" for c in port_pivot.columns]
 
         # 多空组合（最高分组 - 最低分组）
+        # 使用实际的最高/最低组标签（qcut 可能因重复值减少分组数）
         ls = pd.DataFrame()
-        if not port_pivot.empty and "Q1" in port_pivot.columns and f"Q{q}" in port_pivot.columns:
-            ls = (port_pivot[f"Q{q}"] - port_pivot["Q1"]).rename("LS").to_frame()
+        if not port_pivot.empty and len(port_pivot.columns) >= 2:
+            max_q_col = port_pivot.columns[-1]  # 最后一列即为最高组
+            min_q_col = port_pivot.columns[0]   # 第一列即为最低组
+            ls = (port_pivot[max_q_col] - port_pivot[min_q_col]).rename("LS").to_frame()
 
         return {"ports": port_pivot, "ls": ls}
     except Exception as e:
