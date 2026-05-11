@@ -1,6 +1,11 @@
 __pycache__/
 */__pycache__
-data/
+data/klines_daily/
+data/tmp_features/
+data/factors/
+data/spot/
+data/index.json
+data/logs/
 images/
 *.egg-info/
 .pytest_cache/
