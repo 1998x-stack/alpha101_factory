@@ -166,8 +166,11 @@ def _fetch_kline_bs_internal(
         for c in num_cols:
             df[c] = pd.to_numeric(df[c], errors="coerce")
 
+        # 添加 symbol 列
+        df.insert(0, "symbol", symbol)
+
         df.sort_values("datetime", inplace=True)
-        return df
+        return df.reset_index(drop=True)
     except Exception as e:
         logger.exception(f"Baostock 数据解析失败: {e}")
         return pd.DataFrame()
