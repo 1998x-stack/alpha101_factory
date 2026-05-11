@@ -3,558 +3,706 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alpha101 Factors — 全部因子详解</title>
+<title>Alpha101 Factors — 全部 101 个因子详解</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/base-dark.css">
 <style>
 :root {
-  --c1: #10b981; --c1d: #059669;
-  --c2: #6366f1; --c2d: #4f46e5;
-  --amber: #f59e0b;
-  --red: #ef4444;
-  --blue: #3b82f6;
-  --pink: #ec4899;
+  --c1: #10b981; --c1d: #059669; --c2: #6366f1; --c2d: #4f46e5;
+  --amber: #f59e0b; --red: #ef4444; --blue: #3b82f6; --pink: #ec4899;
   --font: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
 }
 .hero h1 em { background: linear-gradient(90deg, var(--c1), var(--c2)); }
-.flow-box:nth-child(1) .fb-tag { color: var(--c1); }
-.flow-box:nth-child(3) .fb-tag { color: var(--c2); }
-.flow-box:nth-child(5) .fb-tag { color: var(--amber); }
-.flow-box:nth-child(7) .fb-tag { color: var(--red); }
-.flow-box:nth-child(9) .fb-tag { color: var(--blue); }
 .factor-sec { padding: 64px 0; border-bottom: 1px solid var(--border); }
 .factor-sec:nth-child(even) { background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%); }
 .cat-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-.cat-badge {
-  font-size: 14px; font-weight: 700; padding: 6px 16px;
-  border-radius: 8px; letter-spacing: .05em;
-}
+.cat-badge { font-size: 14px; font-weight: 700; padding: 6px 16px; border-radius: 8px; }
 .cat-title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
 .cat-count { font-size: 14px; color: var(--muted); margin-left: 8px; }
 .cat-desc { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 760px; margin-bottom: 24px; }
 .factor-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-.factor-table th {
-  background: var(--bg2); padding: 12px 16px; text-align: left;
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--border);
-  position: sticky; top: 52px; z-index: 10;
-}
-.factor-table td {
-  padding: 16px 16px; border-bottom: 1px solid var(--faint);
-  font-size: 13px; line-height: 1.6; vertical-align: top;
-  transition: background .15s;
-}
+.factor-table th { background: var(--bg2); padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--border); position: sticky; top: 52px; z-index: 10; }
+.factor-table td { padding: 14px 16px; border-bottom: 1px solid var(--faint); font-size: 13px; line-height: 1.6; vertical-align: top; transition: background .15s; }
 .factor-table tr:hover td { background: rgba(255,255,255,.02); }
-.factor-table td code {
-  font-family: var(--mono); font-size: 12px;
-  background: var(--bg3); padding: 2px 8px; border-radius: 4px;
-  color: var(--c1);
-}
-.factor-table td strong { color: var(--text); font-weight: 600; }
-.factor-table td .f-id {
-  font-family: var(--mono); font-weight: 700; font-size: 14px;
-  color: var(--text);
-}
-.tag {
-  display: inline-block; padding: 2px 8px; border-radius: 4px;
-  font-size: 10px; font-weight: 600; letter-spacing: .04em;
-}
-.tag-mom { background: rgba(16,185,129,.12); color: var(--c1); }
-.tag-rev { background: rgba(99,102,241,.12); color: var(--c2); }
-.tag-vol { background: rgba(245,158,11,.12); color: var(--amber); }
-.tag-liq { background: rgba(59,130,246,.12); color: var(--blue); }
-.tag-com { background: rgba(236,72,153,.12); color: var(--pink); }
-.back-link {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; border-radius: 8px;
-  background: var(--bg2); border: 1px solid var(--border);
-  font-size: 13px; color: var(--muted); text-decoration: none;
-  transition: all .2s;
-}
+.factor-table td code { font-family: var(--mono); font-size: 11px; background: var(--bg3); padding: 2px 6px; border-radius: 4px; color: var(--c1); }
+.factor-table td .f-id { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--text); }
+.back-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border); font-size: 13px; color: var(--muted); text-decoration: none; transition: all .2s; }
 .back-link:hover { border-color: var(--border2); color: var(--text); }
-@media(max-width:900px) {
-  .factor-table { font-size: 12px; }
-  .factor-table th, .factor-table td { padding: 10px 8px; }
-  .factor-table td code { font-size: 11px; }
-}
-@media(max-width:600px) {
-  .factor-table { display: block; overflow-x: auto; }
-}
+.summary-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.summary-tag { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid; }
+.summary-tag.mom { color: var(--c1); border-color: rgba(16,185,129,.3); background: rgba(16,185,129,.08); }
+.summary-tag.rev { color: var(--c2); border-color: rgba(99,102,241,.3); background: rgba(99,102,241,.08); }
+.summary-tag.vol { color: var(--amber); border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.08); }
+.summary-tag.liq { color: var(--blue); border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.08); }
+.summary-tag.com { color: var(--pink); border-color: rgba(236,72,153,.3); background: rgba(236,72,153,.08); }
+@media(max-width:900px) { .factor-table { font-size: 12px; } .factor-table th, .factor-table td { padding: 10px 8px; } }
+@media(max-width:600px) { .factor-table { display: block; overflow-x: auto; } }
 </style>
 </head>
 <body>
 <nav><div class="nav-inner">
-  <span class="nav-brand">Alpha101 <span>因子详解</span></span>
-  <a class="nl" href="#momentum">动量</a>
-  <a class="nl" href="#reversal">反转</a>
-  <a class="nl" href="#volatility">波动率</a>
-  <a class="nl" href="#volume">量价</a>
-  <a class="nl" href="#complex">复杂组合</a>
+  <span class="nav-brand">Alpha101 <span>全部 101 个因子</span></span>
+  <a class="nl" href="#001-010">001-010</a>
+  <a class="nl" href="#011-020">011-020</a>
+  <a class="nl" href="#021-030">021-030</a>
+  <a class="nl" href="#031-040">031-040</a>
+  <a class="nl" href="#041-050">041-050</a>
+  <a class="nl" href="#051-060">051-060</a>
+  <a class="nl" href="#061-070">061-070</a>
+  <a class="nl" href="#071-080">071-080</a>
+  <a class="nl" href="#081-090">081-090</a>
+  <a class="nl" href="#091-101">091-101</a>
   <a class="nl" href="index.html">← 返回首页</a>
 </div></nav>
 
 <div class="page">
-  <!-- HERO -->
-  <section class="hero">
-    <a href="index.html" class="back-link">← 返回首页</a>
-    <div class="hero-badge"><span class="dot"></span>Complete Factor Reference</div>
-    <h1>Alpha101 <em>全部因子详解</em></h1>
-    <p>61 个已实现因子的完整参考手册 — 按功能分类，每个因子包含公式、数据需求和交易逻辑。</p>
-    <div class="tag-row">
-      <span class="ltag" style="color:var(--c1);border-color:rgba(16,185,129,.3)">动量 Momentum</span>
-      <span class="ltag" style="color:var(--c2);border-color:rgba(99,102,241,.3)">反转 Reversal</span>
-      <span class="ltag" style="color:var(--amber);border-color:rgba(245,158,11,.3)">波动率 Volatility</span>
-      <span class="ltag" style="color:var(--blue);border-color:rgba(59,130,246,.3)">量价 Volume-Price</span>
-      <span class="ltag" style="color:var(--pink);border-color:rgba(236,72,153,.3)">复杂组合 Complex</span>
-    </div>
-  </section>
-
-  <!-- ════════════ MOMENTUM ════════════ -->
-  <section class="factor-sec" id="momentum">
-    <div class="cat-header">
-      <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--c1);border:1px solid rgba(16,185,129,.3)">📈 动量因子</span>
-      <span class="cat-title">Momentum</span>
-      <span class="cat-count">8 个因子</span>
-    </div>
-    <p class="cat-desc">动量因子捕捉价格趋势的持续性。核心逻辑：过去上涨的股票倾向于继续上涨，反之亦然。通过价格变化的方向性和强度构建信号。</p>
-    <table class="factor-table">
-      <thead><tr><th style="width:80px">因子</th><th style="width:200px">核心逻辑</th><th>公式 / 说明</th><th style="width:120px">数据需求</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="f-id">Alpha009</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>趋势方向判断</strong><br>若 5 日内最小变化 > 0（持续上涨）取正值；若 5 日内最大变化 < 0（持续下跌）取正值；否则反转信号。捕捉持续趋势方向。</td>
-          <td><code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha010</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>4 日窗口趋势排名</strong><br>类似 Alpha009 但使用 4 日窗口，并对结果做截面排名。更短的窗口捕捉更灵敏的趋势信号。</td>
-          <td><code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha014</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>开盘价与成交量相关性</strong><br>计算开盘价与成交量变化的相关性，结合收益率进行排名。捕捉量价共振的动量效应。</td>
-          <td><code>open</code> <code>volume</code> <code>returns</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha018</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>价格标准差排名</strong><br>计算收盘价的标准差并进行排名。波动率排序后寻找持续性模式。</td>
-          <td><code>close</code> <code>open</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha023</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>日内高低排名</strong><br>比较高价的截面排名与低价截排名的差异。捕捉日内价格区间的动量偏向。</td>
-          <td><code>high</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha033</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>开盘收盘比率</strong><br>计算开盘价与收盘价的比率并进行排名。捕捉日内价格变动的持续性。</td>
-          <td><code>open</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha038</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>收盘价排名与比率</strong><br>计算收盘价的截面排名与开盘收盘比率的组合。排名越高的股票越可能持续上涨。</td>
-          <td><code>close</code> <code>open</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha046</span></td>
-          <td><span class="tag tag-mom">动量</span></td>
-          <td><strong>条件收盘价排名</strong><br>基于收盘价的条件排名：如果 20 天内收盘价上涨天数多则做多，否则做空。</td>
-          <td><code>close</code></td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- ════════════ REVERSAL ════════════ -->
-  <section class="factor-sec" id="reversal">
-    <div class="cat-header">
-      <span class="cat-badge" style="background:rgba(99,102,241,.12);color:var(--c2);border:1px solid rgba(99,102,241,.3)">🔄 反转因子</span>
-      <span class="cat-title">Reversal</span>
-      <span class="cat-count">9 个因子</span>
-    </div>
-    <p class="cat-desc">反转因子捕捉价格过度反应后的回归。核心逻辑：短期大幅上涨后倾向于回调，大幅下跌后倾向于反弹。通过价格极值、波动率变化和成交量异常识别反转信号。</p>
-    <table class="factor-table">
-      <thead><tr><th style="width:80px">因子</th><th style="width:200px">核心逻辑</th><th>公式 / 说明</th><th style="width:120px">数据需求</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="f-id">Alpha004</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>最低价排名反转</strong><br>最低价的截面排名进行 9 日时间序列排名。近期创新低的股票倾向于反弹（过度悲观回归）。</td>
-          <td><code>low</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha012</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>成交量加权价格反转</strong><br>收盘价与成交量排名之和的负值。高成交量+高价格倾向于反转。</td>
-          <td><code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha019</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>收益率平滑反转</strong><br>收盘价变化与收益率变化的负相关性。捕捉价格变动与收益率背离的回归信号。</td>
-          <td><code>close</code> <code>returns</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha021</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>均值回归信号</strong><br>收盘价相对于移动平均的偏离程度进行排名。偏离均值越远的股票回归概率越大。</td>
-          <td><code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha026</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>成交量与最高价反转</strong><br>成交量排名与最高价排名的相关性取负。高量+高价倾向于反转下跌。</td>
-          <td><code>volume</code> <code>high</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha034</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>收益率均值回归</strong><br>收益率的均值回归信号。近期高收益率倾向于降低，低收益率倾向于升高。</td>
-          <td><code>returns</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha044</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>最低价与成交量反转</strong><br>最低价排名与成交量排名的负相关性。创新低+高量倾向于反弹。</td>
-          <td><code>high</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha049</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>异常高收益反转</strong><br>超过阈值的收盘价变化取负值。极端上涨后倾向于回调。</td>
-          <td><code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha051</span></td>
-          <td><span class="tag tag-rev">反转</span></td>
-          <td><strong>5日/20日比率反转</strong><br>5日最高最低价比率与20日比率的偏离。短期极值相对长期极值的偏离程度预示回归。</td>
-          <td><code>close</code></td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- ════════════ VOLATILITY ════════════ -->
-  <section class="factor-sec" id="volatility">
-    <div class="cat-header">
-      <span class="cat-badge" style="background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3)">⚡ 波动率因子</span>
-      <span class="cat-title">Volatility</span>
-      <span class="cat-count">7 个因子</span>
-    </div>
-    <p class="cat-desc">波动率因子衡量价格变动的幅度和频率。核心逻辑：低波动率股票倾向于产生更高风险调整收益（低波异象），高波动率股票倾向于后续表现不佳。</p>
-    <table class="factor-table">
-      <thead><tr><th style="width:80px">因子</th><th style="width:200px">核心逻辑</th><th>公式 / 说明</th><th style="width:120px">数据需求</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="f-id">Alpha001</span></td>
-          <td><span class="tag tag-vol">波动率</span></td>
-          <td><strong>条件波动率排名</strong><br>收益率为负时用20日收益率标准差，为正时用收盘价。平方后做5日时间序列排名，再截面排名减0.5。捕捉波动率与收益的非对称关系。</td>
-          <td><code>returns</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha020</span></td>
-          <td><span class="tag tag-vol">波动率</span></td>
-          <td><strong>日内振幅反转</strong><br>（开盘-昨日收盘）/（最高-最低）的排名与成交量变化排名的组合。日内振幅大倾向于反转。</td>
-          <td><code>open</code> <code>high</code> <code>low</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha035</span></td>
-          <td><span class="tag tag-vol">波动率</span></td>
-          <td><strong>量价波动综合信号</strong><br>成交量与收盘价比率排名 + 最高最低价比率排名 - 收益率排名。综合量价波动特征。</td>
-          <td><code>volume</code> <code>close</code> <code>high</code> <code>low</code> <code>returns</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha040</span></td>
-          <td><span class="tag tag-vol">波动率</span></td>
-          <td><strong>成交量加权波动率</strong><br>最高价与成交量变化率的负相关排名。高量+高价波动倾向于反向。</td>
-          <td><code>high</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha041</span></td>
-          <td><span class="tag tag-vol">波动率</span></td>
-          <td><strong>VWAP 波动率</strong><br>最高最低价均值与 VWAP 的差异，与 VWAP 的变化率做相关性。衡量 VWAP 附近的波动聚集。</td>
-          <td><code>high</code> <code>low</code> <code>vwap</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha054</span></td>
-          <td><span class="tag tag-vol">波动率</span></td>
-          <td><strong>价格区间标准化</strong><br>（收盘价 - 最低价）/（最高价 - 最低价）的排名。价格在日内区间中的相对位置标准化。</td>
-          <td><code>low</code> <code>close</code> <code>open</code> <code>high</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha052</span></td>
-          <td><span class="tag tag-vol">波动率</span></td>
-          <td><strong>成交量加权低价波动</strong><br>最低价排名与收益率、成交量的组合排名。捕捉低价波动中的异常模式。</td>
-          <td><code>low</code> <code>returns</code> <code>volume</code></td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- ════════════ VOLUME-PRICE ════════════ -->
-  <section class="factor-sec" id="volume">
-    <div class="cat-header">
-      <span class="cat-badge" style="background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.3)">📊 量价因子</span>
-      <span class="cat-title">Volume-Price</span>
-      <span class="cat-count">19 个因子</span>
-    </div>
-    <p class="cat-desc">量价因子同时利用价格和成交量信息构建信号。核心逻辑：成交量是价格变动的确认信号 — 有量支撑的价格变动更可靠，无量支撑的变动倾向于反转。</p>
-    <table class="factor-table">
-      <thead><tr><th style="width:80px">因子</th><th style="width:200px">核心逻辑</th><th>公式 / 说明</th><th style="width:120px">数据需求</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="f-id">Alpha003</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>开盘价与成交量相关性</strong><br>开盘价截面排名与成交量截面排名的10日滚动相关系数取负。开盘量价背离时信号更强。</td>
-          <td><code>open</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha005</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>VWAP 偏离信号</strong><br>（开盘价 - 10日均价）的排名 × |收盘价 - VWAP| 的排名负值。VWAP 附近的交易行为提供信号。</td>
-          <td><code>open</code> <code>vwap</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha006</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>开盘价与成交量相关性</strong><br>开盘价与成交量的10日滚动相关系数取负。量价背离预示反转。</td>
-          <td><code>open</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha011</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>VWAP 与收盘价排名</strong><br>（VWAP - 收盘价）排名与（收盘价 - 开盘价）排名的组合。VWAP 偏离提供交易信号。</td>
-          <td><code>vwap</code> <code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha013</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>收盘价与成交量协方差</strong><br>收盘价排名与成交量排名的滚动协方差取负。量价协方差捕捉共振信号。</td>
-          <td><code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha016</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>最高价与成交量协方差</strong><br>最高价排名与成交量排名的滚动协方差取负。高价伴随高量倾向于反转。</td>
-          <td><code>high</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha022</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>最高价与成交量相关性</strong><br>最高价与成交量的5日滚动相关性取3日最大值取负。短期量价共振的极值信号。</td>
-          <td><code>high</code> <code>volume</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha025</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>多因子综合排名</strong><br>收益率×VWAP×最高价×成交量等多个变量的组合排名。多源信息融合提高信号质量。</td>
-          <td><code>returns</code> <code>vwap</code> <code>high</code> <code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha030</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>收盘价加权反转</strong><br>收盘价变化与成交量排名的加权组合。量价加权后的反转信号。</td>
-          <td><code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha031</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>多变量排名综合</strong><br>收盘价、最低价、成交量排名之和的组合排名。多个价格维度综合判断。</td>
-          <td><code>close</code> <code>volume</code> <code>low</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha032</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>VWAP 偏离度</strong><br>收盘价与 VWAP 差异的持续时间。价格在 VWAP 下方时间越长，回归动力越大。</td>
-          <td><code>close</code> <code>vwap</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha043</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>成交量相对 ADV 排名</strong><br>成交量与20日平均成交量比率的20日时间序列排名 × 收盘价7日变化的8日排名。量比+价变综合。</td>
-          <td><code>volume</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha045</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>量价负相关</strong><br>收盘价与成交量的滚动相关性取负。量价负相关时信号更强。</td>
-          <td><code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha050</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>成交量与 VWAP 排名</strong><br>成交量排名与 VWAP 排名的组合排名取负。量价排名偏离时产生信号。</td>
-          <td><code>volume</code> <code>vwap</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha055</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>价格区间位置与成交量</strong><br>（收盘价-最低价）/（最高价-最低价）排名与成交量排名的滚动相关性取负。</td>
-          <td><code>close</code> <code>high</code> <code>low</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha061</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>VWAP 与成交量排名</strong><br>VWAP 与成交量排名的综合信号。捕捉 VWAP 附近的量价共振。</td>
-          <td><code>vwap</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha083</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>日内高低 VWAP 综合</strong><br>最高价、最低价、收盘价、VWAP、成交量的综合排名信号。多变量融合。</td>
-          <td><code>high</code> <code>low</code> <code>close</code> <code>vwap</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha084</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>VWAP 与收盘价组合</strong><br>VWAP 与收盘价排名的负相关信号。VWAP 偏离程度越大信号越强。</td>
-          <td><code>vwap</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha086</span></td>
-          <td><span class="tag tag-liq">量价</span></td>
-          <td><strong>量价延迟信号</strong><br>成交量与收盘价的延迟相关性。量价关系的时间滞后效应。</td>
-          <td><code>close</code> <code>open</code> <code>vwap</code> <code>volume</code></td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- ════════════ COMPLEX ════════════ -->
-  <section class="factor-sec" id="complex">
-    <div class="cat-header">
-      <span class="cat-badge" style="background:rgba(236,72,153,.12);color:var(--pink);border:1px solid rgba(236,72,153,.3)">🧩 复杂组合因子</span>
-      <span class="cat-title">Complex</span>
-      <span class="cat-count">18 个因子</span>
-    </div>
-    <p class="cat-desc">复杂组合因子结合多种价格、成交量、波动率和排名信号，通过非线性变换、decay_linear、嵌套排名等方式构建高维信号。这些因子通常涉及多个变量之间的复杂交互。</p>
-    <table class="factor-table">
-      <thead><tr><th style="width:80px">因子</th><th style="width:200px">核心逻辑</th><th>公式 / 说明</th><th style="width:120px">数据需求</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="f-id">Alpha036</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>多变量加权排名</strong><br>开盘价与 VWAP 的加权平均与成交量的相关性 + 价格与 VWAP 差异的排名。多变量交互信号。</td>
-          <td><code>close</code> <code>open</code> <code>volume</code> <code>vwap</code> <code>returns</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha037</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>延迟收盘价与开盘价</strong><br>延迟的（开盘-收盘）与收盘价的相关性排名。时间滞后效应捕捉。</td>
-          <td><code>open</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha039</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>量价综合排名</strong><br>收盘价与成交量排名的负相关性 + 收益率排名的组合。多源信号融合。</td>
-          <td><code>close</code> <code>volume</code> <code>returns</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha042</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>VWAP 与收盘价排名</strong><br>VWAP 排名的均值与收盘价排名的加权组合。VWAP 作为基准的排名信号。</td>
-          <td><code>vwap</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha047</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>量价比与 ADV 排名</strong><br>收盘价与最高价比率排名 / ADV20 的排名。相对量价比的标准化信号。</td>
-          <td><code>close</code> <code>high</code> <code>vwap</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha053</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>价格不平衡信号</strong><br>（（收盘-低）-（高-收盘））/（高-低）的9日变化取负。捕捉日内价格不平衡的持续性。</td>
-          <td><code>close</code> <code>low</code> <code>high</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha060</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>日内极值信号</strong><br>（最高-最低）/ 成交量的加权排名组合。日内极值与成交量的非线性关系。</td>
-          <td><code>high</code> <code>low</code> <code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha064</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>多变量衰减排名</strong><br>VWAP 与成交量相关性的 decay_linear + 收盘价与成交量相关性的 time_rank。非线性衰减信号。</td>
-          <td><code>open</code> <code>low</code> <code>high</code> <code>vwap</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha065</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>开盘价与 VWAP 综合</strong><br>开盘价×0.178 + VWAP×0.822 与成交量的相关性排名 vs 开盘价相对最低价的排名。混合价格基准。</td>
-          <td><code>open</code> <code>vwap</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha071</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>衰减线性排名</strong><br>收盘价 time_rank 的 decay_linear 与 VWAP time_rank 的 decay_linear 的最大值。衰减加权的排名极值。</td>
-          <td><code>close</code> <code>low</code> <code>open</code> <code>vwap</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha085</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>成交量与价格变化</strong><br>最高价与成交量变化的排名 + 收盘价排名的组合。量价变化率的综合信号。</td>
-          <td><code>high</code> <code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha094</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>VWAP 与成交量相关性</strong><br>VWAP 与成交量的滚动排名信号。VWAP 附近的量价关系变化。</td>
-          <td><code>vwap</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha095</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>日内均价与成交量</strong><br>（高+低）/2 的滚动和与 ADV40 的相关性的5次幂 vs 开盘价相对最低价的排名。高阶非线性信号。</td>
-          <td><code>open</code> <code>high</code> <code>low</code> <code>close</code> <code>volume</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha096</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>VWAP 排名衰减</strong><br>VWAP 与成交量相关性的 decay_linear 排名 vs 收盘价与 ADV60 相关性的 time_rank。双通道衰减信号取最大值。</td>
-          <td><code>vwap</code> <code>volume</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha098</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>VWAP 与累计 ADV</strong><br>VWAP 与 ADV5 累计值的相关性排名 - 开盘价与 ADV15 相关性的 argmin 的 time_rank。多尺度量价信号。</td>
-          <td><code>vwap</code> <code>volume</code> <code>open</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha099</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>均价与成交量相关</strong><br>（高+低）/2 的滚动和与 ADV60 的相关性排名 vs 最低价与成交量相关性排名。均价基准的量价关系。</td>
-          <td><code>high</code> <code>low</code> <code>volume</code> <code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha024</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>收盘价条件排名</strong><br>收盘价变化的条件排名：根据变化方向和幅度进行非线性排名。条件化排名信号。</td>
-          <td><code>close</code></td>
-        </tr>
-        <tr>
-          <td><span class="f-id">Alpha101</span></td>
-          <td><span class="tag tag-com">复杂</span></td>
-          <td><strong>多变量综合信号</strong><br>开盘价、最高价、最低价、收盘价的综合排名组合。四价合一的终极因子。</td>
-          <td><code>open</code> <code>high</code> <code>low</code> <code>close</code></td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <p>Alpha101 Factory v0.2.0 · 61 Factors · <a href="index.html" style="color:var(--c1)">← 返回首页</a> · <a href="https://github.com/1998x-stack/alpha101_factory" style="color:var(--c1)">GitHub ↗</a></p>
-  </footer>
+<section class="hero">
+  <a href="index.html" class="back-link">← 返回首页</a>
+  <div class="hero-badge"><span class="dot"></span>Complete Factor Reference</div>
+  <h1>Alpha101 <em>全部 101 个因子详解</em></h1>
+  <p>基于 WorldQuant Alpha101 论文的完整因子参考手册 — 101 个因子按序号分为 10 组，每个因子包含公式说明和数据需求。</p>
+  <div class="summary-bar">
+    <span class="summary-tag mom">001-010 (10个)</span>
+    <span class="summary-tag rev">011-020 (10个)</span>
+    <span class="summary-tag vol">021-030 (10个)</span>
+    <span class="summary-tag liq">031-040 (10个)</span>
+    <span class="summary-tag com">041-050 (10个)</span>
+    <span class="summary-tag mom">051-060 (10个)</span>
+    <span class="summary-tag rev">061-070 (10个)</span>
+    <span class="summary-tag vol">071-080 (10个)</span>
+    <span class="summary-tag liq">081-090 (10个)</span>
+    <span class="summary-tag com">091-101 (11个)</span>
+  </div>
+</section>
+<section class="factor-sec" id="001-010">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--c1);border:1px solid rgba(16,185,129,.3)">📊 Alpha 001-010</span>
+    <span class="cat-title">第 001-010 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha001</span></td>
+        <td>(-1 * ts_rank(rank(log(volume)), 5)) * rank(((close - open) / open))</td>
+        <td><code>returns</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha002</span></td>
+        <td>(-1 * correlation(rank(delta(log(volume), 2)), rank(((close - open) / open)), 6))</td>
+        <td><code>close</code> <code>open</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha003</span></td>
+        <td>(-1 * rolling_corr(rank(open), rank(volume), 10))</td>
+        <td><code>open</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha004</span></td>
+        <td>(-1 * ts_rank(cs_rank(low), 9))</td>
+        <td><code>low</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha005</span></td>
+        <td>(-1 * rank(open - (sum(vwap, 10) / 10))) * (-1 * rank(abs(close - vwap)))</td>
+        <td><code>open</code> <code>vwap</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha006</span></td>
+        <td>(-1 * rolling_corr(open, volume, 10))</td>
+        <td><code>open</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha007</span></td>
+        <td>(-1 * rank(abs(delta(close, 3)) * (volume / adv20)))</td>
+        <td><code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha008</span></td>
+        <td>-rank(((sum(open, 5) * sum(returns, 5)) - delay((sum(open, 5) * sum(returns, 5)), 10)))</td>
+        <td><code>open</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha009</span></td>
+        <td>((0 < ts_min(delta(close, 1), 5)) * (-1)) + ((0 < ts_max(delta(close, 1), 5)) * 1)</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha010</span></td>
+        <td>rank(((0 < ts_min(delta(close, 1), 4))) * (-1)) + rank(((0 < ts_max(delta(close, 1), 4))) * 1)</td>
+        <td><code>close</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="011-020">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--c2);border:1px solid rgba(16,185,129,.3)">📈 Alpha 011-020</span>
+    <span class="cat-title">第 011-020 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha011</span></td>
+        <td>((rank(ts_rank((vwap - close), 3)) + (-1 * rank(ts_rank((close - vwap), 3)))) * rank(volume / adv20))</td>
+        <td><code>vwap</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha012</span></td>
+        <td>(-1 * sign((volume * delta(close, 1))))</td>
+        <td><code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha013</span></td>
+        <td>(-1 * rank(covariance(rank(close), rank(volume), 5)))</td>
+        <td><code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha014</span></td>
+        <td>rank(((open - delay(close, 1)) * (correlation(open, volume, 20))))</td>
+        <td><code>open</code> <code>volume</code> <code>returns</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha015</span></td>
+        <td>(-1 * sum(rank(correlation(rank(high), rank(volume), 3)), 3))</td>
+        <td><code>high</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha016</span></td>
+        <td>(-1 * rank(covariance(rank(high), rank(volume), 5)))</td>
+        <td><code>high</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha017</span></td>
+        <td>(-1 * rank(rank(close) * rank(volume) * rank(((adv20 / low) * rank(((high - low) / (high + low)))))))</td>
+        <td><code>high</code> <code>low</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha018</span></td>
+        <td>(-1 * rank((std(abs((close - open)), 5) + (close - open)) + correlation(close, open, 10)))</td>
+        <td><code>close</code> <code>open</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha019</span></td>
+        <td>((-1 * sign((close - delay(close, 7)) * correlation(close, delay(close, 7), 250))))</td>
+        <td><code>close</code> <code>returns</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha020</span></td>
+        <td>((-1 * rank((open - delay(high, 1)) * correlation(open, volume, 10))))</td>
+        <td><code>open</code> <code>high</code> <code>low</code> <code>close</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="021-030">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--amber);border:1px solid rgba(16,185,129,.3)">🔄 Alpha 021-030</span>
+    <span class="cat-title">第 021-030 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha021</span></td>
+        <td>((((-1 * mean(returns, 20)) - open) * close) * volume)</td>
+        <td><code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha022</span></td>
+        <td>(-1 * (delta(correlation(high, volume, 5), 5) * rank(std(close, 20))))</td>
+        <td><code>high</code> <code>volume</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha023</span></td>
+        <td>(-1 * rank((sum(high, 20) / 20) * high))</td>
+        <td><code>high</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha024</span></td>
+        <td>(-1 * rank(delta(sum(close, 5), 5)))</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha025</span></td>
+        <td>(-1 * rank((((close - open) / delay(close, 7)) * correlation(close, volume, 250)) * rank(returns)))</td>
+        <td><code>returns</code> <code>vwap</code> <code>high</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha026</span></td>
+        <td>(-1 * ts_rank(volume, 5))</td>
+        <td><code>volume</code> <code>high</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha027</span></td>
+        <td>((0.5 < rank((sum(correlation(rank(volume), rank(vwap), 6), 6) / 6))) * (-1))</td>
+        <td><code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha028</span></td>
+        <td>scale(((correlation(adv20, low, 5) + ((high + low) / 2)) - close))</td>
+        <td><code>high</code> <code>low</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha029</span></td>
+        <td>(min(product(rank(rank(scale(log(sum(rank(rank(-1 * rank(delta((close - 1), 5))))), 2))))), 5) + ts_rank(delay(1, 1), 5)</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha030</span></td>
+        <td>(-1 * (rank(1 - (rank(returns) * rank(volume))) * rank(returns)))</td>
+        <td><code>close</code> <code>volume</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="031-040">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--red);border:1px solid rgba(16,185,129,.3)">⚡ Alpha 031-040</span>
+    <span class="cat-title">第 031-040 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha031</span></td>
+        <td>(-1 * rank(rank(rank(decay_linear((-1 * rank(rank(delta(close, 10)))), 10))))</td>
+        <td><code>close</code> <code>volume</code> <code>low</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha032</span></td>
+        <td>(-1 * sum(rank(correlation(rank(volume), rank(vwap), 5)), 5))</td>
+        <td><code>close</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha033</span></td>
+        <td>(((-1 * ((min(low, 5) - delay(min(low, 5), 5)) / min(low, 5))) * sum(volume, 10)) / sum(volume, 5))</td>
+        <td><code>open</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha034</span></td>
+        <td>((((rank(returns) * rank(volume)) / rank(close - open)) * rank(returns))</td>
+        <td><code>returns</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha035</span></td>
+        <td>Alpha035</td>
+        <td><code>volume</code> <code>close</code> <code>high</code> <code>low</code> <code>returns</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha036</span></td>
+        <td>((-1 * rank(ts_rank(correlation(((high * 0.5) + (low * 0.5)), adv20, 10), 15))))</td>
+        <td><code>close</code> <code>open</code> <code>volume</code> <code>vwap</code> <code>returns</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha037</span></td>
+        <td>(((-1 * rank(ts_rank((delay(close, 1) / close), 10))) * rank(correlation(open, volume, 10))))</td>
+        <td><code>open</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha038</span></td>
+        <td>((-1 * rank(ts_rank(close, 10))) * rank((close / open)))</td>
+        <td><code>close</code> <code>open</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha039</span></td>
+        <td>((-1 * rank(((decay_linear(delta(close, 7), 8) / decay_linear(correlation(((close * 0.5) + (vwap * 0.5)), adv20, 9), 10)</td>
+        <td><code>close</code> <code>volume</code> <code>returns</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha040</span></td>
+        <td>((-1 * rank(std(high, 10))) * correlation(high, volume, 10))</td>
+        <td><code>high</code> <code>volume</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="041-050">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--blue);border:1px solid rgba(16,185,129,.3)">📉 Alpha 041-050</span>
+    <span class="cat-title">第 041-050 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha041</span></td>
+        <td>(((high * low)^0.5) - vwap)</td>
+        <td><code>high</code> <code>low</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha042</span></td>
+        <td>(-1 * rank(std(high, 10) * correlation(high, volume, 10)))</td>
+        <td><code>vwap</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha043</span></td>
+        <td>(ts_rank(volume / adv20, 20) * ts_rank((-1 * delta(close, 7)), 8))</td>
+        <td><code>volume</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha044</span></td>
+        <td>((-1 * rank(ts_rank(correlation(high, rank(volume), 5), 5))) * rank(returns))</td>
+        <td><code>high</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha045</span></td>
+        <td>((-1 * ((rank((sum(delay(close, 5), 20) / 20)) * correlation(close, volume, 2))))</td>
+        <td><code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha046</span></td>
+        <td>(-1 * rank(delta((((close * 0.375) + (open * 0.625)), 1))))</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha047</span></td>
+        <td>((rank(1 / close) * volume) / adv20)</td>
+        <td><code>close</code> <code>high</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha048</span></td>
+        <td>(correlation(delta(close, 1), delta(delay(close, 1), 1), 250) * delta(close, 1)) / close</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha049</span></td>
+        <td>(-1 * rank(((sum(high, 15) - sum(low, 15)) / 15)))</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha050</span></td>
+        <td>(-1 * ts_rank(rank(correlation(rank(volume), rank(vwap), 5)), 5))</td>
+        <td><code>volume</code> <code>vwap</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="051-060">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--pink);border:1px solid rgba(16,185,129,.3)">🎯 Alpha 051-060</span>
+    <span class="cat-title">第 051-060 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha051</span></td>
+        <td>(-1 * rank(((sum(high, 20) - sum(low, 20)) / 20)))</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha052</span></td>
+        <td>((-1 * delta((((close - low) - (high - close)) / (close - low)), 9)))</td>
+        <td><code>low</code> <code>returns</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha053</span></td>
+        <td>(-1 * delta((((close - low) - (high - close)) / (high - low)), 9))</td>
+        <td><code>close</code> <code>low</code> <code>high</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha054</span></td>
+        <td>((-1 * ((low - close) * (open ** 5))) / ((low - high) * (close ** 5)))</td>
+        <td><code>low</code> <code>close</code> <code>open</code> <code>high</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha055</span></td>
+        <td>(-1 * correlation(rank(((close - min(low, 12)) / (max(high, 12) - min(low, 12)))), rank(volume), 6))</td>
+        <td><code>close</code> <code>high</code> <code>low</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha056</span></td>
+        <td>(0 - (1 * (rank((sum(returns, 10) / sum(sum(returns, 2), 3))) * rank((returns * cap)))))</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha057</span></td>
+        <td>(0 - (1 * ((close - vwap) / decay_linear(rank(ts_rank(close, 30)), 2))))</td>
+        <td><code>close</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha058</span></td>
+        <td>(-1 * Ts_Rank(decay_linear(correlation(vwap, volume, 4), 8), 6))</td>
+        <td><code>close</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha059</span></td>
+        <td>(-1 * Ts_Rank(decay_linear(correlation(vwap, volume, 4), 16), 8))</td>
+        <td><code>close</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha060</span></td>
+        <td>(-1 * correlation(rank(((close - min(low, 12)) / (max(high, 12) - min(low, 12)))), rank(volume), 6))</td>
+        <td><code>high</code> <code>low</code> <code>close</code> <code>volume</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="061-070">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--c1);border:1px solid rgba(16,185,129,.3)">📊 Alpha 061-070</span>
+    <span class="cat-title">第 061-070 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha061</span></td>
+        <td>(rank((vwap - min(vwap, 16))) < rank(correlation(vwap, adv180, 18)))</td>
+        <td><code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha062</span></td>
+        <td>(-1 * correlation(vwap, rank(adv5), 20))</td>
+        <td><code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha063</span></td>
+        <td>((-1 * correlation(rank(((rank(close) / rank(volume)))), rank(((vwap / 2.51051) + ((vwap * (1 - 0.728317))))), 10))</td>
+        <td><code>close</code> <code>volume</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha064</span></td>
+        <td>((rank(correlation(sum(((open * 0.178404) + (low * (1 - 0.178404))), 12), sum(adv120, 12), 16)) < rank(correlation(rank(</td>
+        <td><code>open</code> <code>low</code> <code>high</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha065</span></td>
+        <td>(rank(correlation(((open * 0.00817205) + (vwap * (1 - 0.00817205))), sum(adv60, 60), 9)) < rank(((open - ts_min(open, 13</td>
+        <td><code>open</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha066</span></td>
+        <td>((close - delay(close, 6)) / delay(close, 6)) * volume</td>
+        <td><code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha067</span></td>
+        <td>(-1 * correlation(delta(close, 1), delay(close, 1), 250) * (close / delay(close, 1)))</td>
+        <td><code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha068</span></td>
+        <td>Ts_Rank(correlation(rank(high), rank(adv15), 9), 14)</td>
+        <td><code>high</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha069</span></td>
+        <td>((rank(delta(close, 1) / delay(close, 1)) * rank(volume / adv20)) * rank(high - low))</td>
+        <td><code>high</code> <code>low</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha070</span></td>
+        <td>(-1 * rank(delta(((close - low) / (high - low)), 1)))</td>
+        <td><code>high</code> <code>low</code> <code>close</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="071-080">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--c2);border:1px solid rgba(16,185,129,.3)">📈 Alpha 071-080</span>
+    <span class="cat-title">第 071-080 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha071</span></td>
+        <td>max(rank(decay_linear(delta(vwap, 5), 17)), Ts_Rank(delta(((close * 0.496803) + (vwap * 0.503197)), 2), 5)) * (-1)</td>
+        <td><code>close</code> <code>low</code> <code>open</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha072</span></td>
+        <td>(rank(decay_linear(correlation(((high + low) / 2), adv40, 9), 14)) - rank(decay_linear(correlation(rank(vwap), rank(volu</td>
+        <td><code>high</code> <code>low</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha073</span></td>
+        <td>(max(rank(decay_linear(delta(vwap, 5), 17)), Ts_Rank(delta(((close * 0.496803) + (vwap * 0.503197)), 2), 5)) * (-1))</td>
+        <td><code>close</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha074</span></td>
+        <td>((rank(correlation(close, sum(adv30, 37), 15)) < rank(correlation(rank(((high * 0.0261661) + (vwap * (1 - 0.0261661)))),</td>
+        <td><code>high</code> <code>close</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha075</span></td>
+        <td>(correlation(volume, vwap, 4) * (-1))</td>
+        <td><code>volume</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha076</span></td>
+        <td>(max(rank(decay_linear(delta(vwap, 1), 12)), Ts_Rank(decay_linear(((close * 0.383476) + (vwap * 0.616524)), 19), 8)) * (</td>
+        <td><code>close</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha077</span></td>
+        <td>(min(rank(decay_linear(((high + low) / 2) + ((high - low) / 2), 20)), Ts_Rank(decay_linear(correlation(((high + low) / 2</td>
+        <td><code>high</code> <code>low</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha078</span></td>
+        <td>(rank(correlation(sum(((low * 0.352233) + (vwap * 0.647767)), 20), sum(adv40, 20), 7)) * rank(rank(volume / adv20)))</td>
+        <td><code>low</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha079</span></td>
+        <td>(rank(delta(((close * 0.607189) + (open * 0.392811)), 1)) < rank(correlation(rank(vwap), rank(adv150), 10)))</td>
+        <td><code>close</code> <code>open</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha080</span></td>
+        <td>((rank(Sign(delta(((open * 0.868128) + (high * 0.131872)), 4))) * rank(correlation(((high * 0.51827) + (low * 0.48173)),</td>
+        <td><code>high</code> <code>low</code> <code>open</code> <code>volume</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="081-090">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--amber);border:1px solid rgba(16,185,129,.3)">🔄 Alpha 081-090</span>
+    <span class="cat-title">第 081-090 组</span>
+    <span class="cat-count">10 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha081</span></td>
+        <td>((rank(Log(product(rank((rank(correlation(vwap, sum(adv10, 50), 8))^4)), 15))) < rank(correlation(rank(vwap), rank(volum</td>
+        <td><code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha082</span></td>
+        <td>(min(rank(decay_linear(delta(open, 1), 15)), Ts_Rank(decay_linear(correlation(volume, low, 6), 17), 7)) * (-1))</td>
+        <td><code>open</code> <code>low</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha083</span></td>
+        <td>((rank(delay(((high - low) / (sum(close, 5) / 5)), 2)) * rank(rank(volume))) / (((high - low) / (sum(close, 5) / 5)) * (</td>
+        <td><code>high</code> <code>low</code> <code>close</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha084</span></td>
+        <td>(-1 * power((vwap - ts_min(vwap, 14)), 3))</td>
+        <td><code>vwap</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha085</span></td>
+        <td>(rank((volume / adv20)) * rank((high - low) / close))</td>
+        <td><code>high</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha086</span></td>
+        <td>((delay((correlation(close, volume, 10)), 5) * rank(((sum(close, 20) / 20) * volume))) * rank(volume / adv60))</td>
+        <td><code>close</code> <code>open</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha087</span></td>
+        <td>(rank(decay_linear(correlation(((high * 0.876703) + (close * 0.123297)), adv30, 10), 13)) - rank(decay_linear(correlatio</td>
+        <td><code>high</code> <code>close</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha088</span></td>
+        <td>((Ts_Rank(decay_linear(correlation(((close * 0.496803) + (vwap * 0.503197)), adv20, 5), 7), 5) < rank(decay_linear(corre</td>
+        <td><code>close</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha089</span></td>
+        <td>(Ts_Rank(decay_linear(correlation(low, adv10, 6), 9), 4) - Ts_Rank(decay_linear(Ts_Rank(correlation(vwap, adv20, 5), 18)</td>
+        <td><code>low</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha090</span></td>
+        <td>((rank((close - min(close, 5))) ^ rank(decay_linear((vwap * rank(((high * 0.51827) + (low * 0.48173)))), 14))) * (-1))</td>
+        <td><code>high</code> <code>low</code> <code>close</code> <code>vwap</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="factor-sec" id="091-101">
+  <div class="cat-header">
+    <span class="cat-badge" style="background:rgba(16,185,129,.12);color:var(--red);border:1px solid rgba(16,185,129,.3)">⚡ Alpha 091-101</span>
+    <span class="cat-title">第 091-101 组</span>
+    <span class="cat-count">11 个因子</span>
+  </div>
+  <table class="factor-table">
+    <thead><tr><th style="width:80px">因子</th><th>公式 / 说明</th><th style="width:150px">数据需求</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="f-id">Alpha091</span></td>
+        <td>((rank((close - min(close, 5))) * rank(decay_linear(vwap, 14))) * (-1))</td>
+        <td><code>close</code> <code>vwap</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha092</span></td>
+        <td>((Ts_Rank(decay_linear(correlation(((high * 0.51827) + (low * 0.48173)), adv30, 5), 7), 5) < rank(decay_linear(correlati</td>
+        <td><code>high</code> <code>low</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha093</span></td>
+        <td>(Ts_Rank(decay_linear(correlation(rank(vwap), rank(volume), 4), 12), 5) - Ts_Rank(decay_linear(correlation(((high * 0.51</td>
+        <td><code>high</code> <code>low</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha094</span></td>
+        <td>((rank(((vwap - min(vwap, 11))) / (ts_rank(correlation(vwap, adv150, 6), 15)))) * rank(volume / adv20))</td>
+        <td><code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha095</span></td>
+        <td>(rank((open - ts_min(open, 12))) < rank(correlation(((high + low) / 2), sum(adv40, 40), 10)))</td>
+        <td><code>open</code> <code>high</code> <code>low</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha096</span></td>
+        <td>(-1 * max(Ts_Rank(decay_linear(correlation(rank(vwap), rank(volume), 4), 4), 8), Ts_Rank(decay_linear(Ts_Rank(correlatio</td>
+        <td><code>vwap</code> <code>volume</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha097</span></td>
+        <td>((rank(decay_linear(delta(((low * 0.721002) + (vwap * 0.278998)), 3), 7)) < Ts_Rank(decay_linear(Ts_Rank(correlation(clo</td>
+        <td><code>low</code> <code>vwap</code> <code>close</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha098</span></td>
+        <td>(rank(decay_linear(correlation(vwap, sum(adv5, 26), 5), 8)) - rank(decay_linear(Ts_Rank(correlation(rank(close), rank(vo</td>
+        <td><code>vwap</code> <code>volume</code> <code>open</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha099</span></td>
+        <td>(-1 * rank(correlation(((high + low) / 2), sum(adv60, 40), 9)))</td>
+        <td><code>high</code> <code>low</code> <code>volume</code> <code>close</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha100</span></td>
+        <td>(0 - (1 * ((1.5 * scale(vwap)) * scale(correlation(((high * 0.51827) + (low * 0.48173)), adv30, 15)))))</td>
+        <td><code>high</code> <code>low</code> <code>vwap</code> <code>volume</code></td>
+      </tr>
+      <tr>
+        <td><span class="f-id">Alpha101</span></td>
+        <td>((close - open) / ((high - low) + 0.001))</td>
+        <td><code>open</code> <code>high</code> <code>low</code> <code>close</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<footer class="footer">
+  <p>Alpha101 Factory v0.2.0 · 101 Factors · <a href="index.html" style="color:var(--c1)">← 返回首页</a> · <a href="https://github.com/1998x-stack/alpha101_factory" style="color:var(--c1)">GitHub ↗</a></p>
+</footer>
 </div>
 </body>
 </html>
