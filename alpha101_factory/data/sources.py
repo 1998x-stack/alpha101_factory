@@ -17,13 +17,37 @@
 """
 from __future__ import annotations
 
+import os
+import time
 from abc import ABC, abstractmethod
 from typing import Optional
 
 import akshare as ak
-import baostock as bs
 import pandas as pd
 from loguru import logger
+
+from alpha101_factory.data.baostock_api import login, logout, fetch_stock_data
+from alpha101_factory.utils.validation import (
+    is_valid_stock_code,
+    is_valid_adjust,
+    normalize_stock_code,
+    convert_to_baostock_code,
+    convert_adjust_mode,
+    format_date_for_baostock
+)
+
+# 代理配置：默认禁用代理避免 EastMoney 代理拦截
+# 设置 ALPHA101_NO_PROXY=0 可保留系统代理（适用于企业内网）
+if os.environ.get("ALPHA101_NO_PROXY", "1") != "0":
+    for _proxy_var in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
+        os.environ.pop(_proxy_var, None)
+    # 强制所有请求绕过代理（requests 库会读取此变量）
+    os.environ["NO_PROXY"] = "*"
+
+# 重试配置
+_MAX_RETRIES: int = 2
+_BASE_DELAY: float = 1.0
+_REQUEST_TIMEOUT: int = 15
 
 # 中文列名到英文列名的映射表
 _COLUMN_NAME_MAPPING: dict[str, str] = {
@@ -53,9 +77,6 @@ _NUMERIC_COLUMNS: list[str] = [
     "amplitude",
     "turnover",
 ]
-
-# 合法的复权方式集合
-_VALID_ADJUST_MODES: frozenset[str] = frozenset({"qfq", "hfq", ""})
 
 
 def _normalize(dataframe: Optional[pd.DataFrame]) -> pd.DataFrame:
@@ -151,7 +172,7 @@ class AkShareSource(DataSource):
 
     AkShare 是优先使用的数据源，提供丰富的 A 股行情数据。
     该实现调用 ``ak.stock_zh_a_hist()`` 获取历史 K 线，
-    调用 ``ak.stock_zh_a_spot()`` 获取实时行情快照。
+    调用 ``ak.stock_zh_a_spot_em()`` 获取实时行情快照（东方财富版，支持分页）。
     """
 
     name: str = "akshare"
@@ -167,15 +188,15 @@ class AkShareSource(DataSource):
         numeric_symbol: str = "".join(filter(str.isdigit, symbol))
 
         # 参数校验：股票代码不能为空
-        if not numeric_symbol:
-            logger.error(f"AkShare 股票代码为空: {symbol}")
+        if not numeric_symbol or not is_valid_stock_code(numeric_symbol):
+            logger.error(f"AkShare 股票代码为空或格式无效: {symbol}")
             return pd.DataFrame()
 
         # 参数校验：复权方式必须合法
-        if adjust not in _VALID_ADJUST_MODES:
+        if not is_valid_adjust(adjust):
             logger.error(
                 f"AkShare 非法复权方式: '{adjust}'，"
-                f"可选值: {sorted(_VALID_ADJUST_MODES)}"
+                f"可选值: {sorted(['qfq', 'hfq', ''])}"
             )
             return pd.DataFrame()
 
@@ -199,12 +220,41 @@ class AkShareSource(DataSource):
                 f"end_date={end_date}，将忽略日期过滤"
             )
 
-        try:
-            raw_dataframe: pd.DataFrame = ak.stock_zh_a_hist(**request_parameters)
-        except Exception as exception:
-            # 不吞异常，让 factory 层处理降级逻辑
-            logger.error(f"AkShare K 线获取失败: {symbol}，错误: {exception}")
-            raise
+        # 带重试的请求逻辑
+        last_exception: Optional[Exception] = None
+        for attempt in range(_MAX_RETRIES + 1):  # Include original attempt
+            try:
+                request_parameters["timeout"] = _REQUEST_TIMEOUT
+                raw_dataframe: pd.DataFrame = ak.stock_zh_a_hist(**request_parameters)
+
+                # Check if the returned dataframe is valid
+                if raw_dataframe is None or raw_dataframe.empty:
+                    logger.warning(f"AkShare {numeric_symbol} 返回空数据")
+                    return pd.DataFrame()
+
+                break  # Success, break out of retry loop
+            except Exception as exception:
+                last_exception = exception
+                if attempt < _MAX_RETRIES:  # Still have retries left
+                    import random as _random
+                    jitter = _random.uniform(0.5, 1.5)
+                    delay = _BASE_DELAY * (2 ** attempt) * jitter
+                    logger.warning(
+                        f"AkShare 第 {attempt + 1} 次尝试失败 ({type(exception).__name__}: {str(exception)[:100]}...), "
+                        f"{delay:.1f}s 后重试"
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(
+                        f"AkShare K 线获取失败 (已重试 {_MAX_RETRIES} 次): "
+                        f"{symbol}，错误: {exception}"
+                    )
+                    # Don't raise the exception here, return empty DataFrame to allow fallback
+                    return pd.DataFrame()
+        else:
+            # This should theoretically never be reached, but as backup:
+            logger.error(f"AkShare K 线获取失败: {symbol}")
+            return pd.DataFrame()
 
         normalized_dataframe: pd.DataFrame = _normalize(raw_dataframe)
 
@@ -229,7 +279,10 @@ class AkShareSource(DataSource):
         """
         logger.info("AkShare 获取全市场行情快照")
         try:
-            raw_dataframe: pd.DataFrame = ak.stock_zh_a_spot()
+            # 使用 stock_zh_a_spot_em()（东方财富版），支持分页且更稳定
+            raw_dataframe: pd.DataFrame = ak.stock_zh_a_spot_em()
+            # 注意：stock_zh_a_spot_em 内部使用 fetch_paginated_data，
+            # 该函数自带超时和重试机制，无需额外设置 timeout
         except Exception as exception:
             logger.warning(f"AkShare 行情快照获取失败: {exception}")
             return pd.DataFrame()
@@ -283,10 +336,7 @@ class BaoStockSource(DataSource):
         Returns:
             BaoStock 格式的代码，如 ``"sh.600000"`` 或 ``"sz.000001"``。
         """
-        numeric_code: str = str(symbol).zfill(6)
-        if numeric_code.startswith("6"):
-            return f"sh.{numeric_code}"
-        return f"sz.{numeric_code}"
+        return convert_to_baostock_code(symbol)
 
     @staticmethod
     def _convert_adjust_mode(adjust: str) -> str:
@@ -298,8 +348,7 @@ class BaoStockSource(DataSource):
         Returns:
             BaoStock 的 adjustflag 值：``"1"``（后复权）、``"2"``（前复权）、``"3"``（不复权）。
         """
-        adjust_mode_mapping: dict[str, str] = {"hfq": "1", "qfq": "2"}
-        return adjust_mode_mapping.get(adjust, "3")
+        return convert_adjust_mode(adjust)
 
     @staticmethod
     def _format_date_for_baostock(date_string: Optional[str]) -> Optional[str]:
@@ -312,24 +361,7 @@ class BaoStockSource(DataSource):
             ``YYYY-MM-DD`` 格式的日期字符串，或 ``None``。
             若输入格式不正确，返回 ``None`` 并记录警告日志。
         """
-        if date_string is None:
-            return None
-
-        # 校验日期格式长度
-        if len(date_string) != 8:
-            logger.warning(
-                f"BaoStock 日期格式不正确: '{date_string}'，期望 8 位数字"
-            )
-            return None
-
-        try:
-            year: str = date_string[:4]
-            month: str = date_string[4:6]
-            day: str = date_string[6:]
-            return f"{year}-{month}-{day}"
-        except (ValueError, IndexError) as exception:
-            logger.warning(f"BaoStock 日期解析失败: '{date_string}'，错误: {exception}")
-            return None
+        return format_date_for_baostock(date_string)
 
     def fetch_kline(
         self,
@@ -342,15 +374,15 @@ class BaoStockSource(DataSource):
         numeric_symbol: str = "".join(filter(str.isdigit, symbol))
 
         # 参数校验：股票代码不能为空
-        if not numeric_symbol:
-            logger.error(f"BaoStock 股票代码为空: {symbol}")
+        if not numeric_symbol or not is_valid_stock_code(numeric_symbol):
+            logger.error(f"BaoStock 股票代码为空或格式无效: {symbol}")
             return pd.DataFrame()
 
         # 参数校验：复权方式必须合法
-        if adjust not in _VALID_ADJUST_MODES:
+        if not is_valid_adjust(adjust):
             logger.error(
                 f"BaoStock 非法复权方式: '{adjust}'，"
-                f"可选值: {sorted(_VALID_ADJUST_MODES)}"
+                f"可选值: {sorted(['qfq', 'hfq', ''])}"
             )
             return pd.DataFrame()
 
@@ -362,94 +394,39 @@ class BaoStockSource(DataSource):
         )
         formatted_end_date: Optional[str] = self._format_date_for_baostock(end_date)
 
-        # BaoStock 登录
-        login_result = bs.login()
-        if login_result.error_code != "0":
-            logger.error(f"BaoStock 登录失败: {login_result.error_msg}")
-            return pd.DataFrame()
-
-        # 定义需要获取的字段
-        requested_fields: str = "date,open,high,low,close,volume,amount"
+        # 转换 BaoStock 代码格式
         baostock_code: str = self._convert_to_baostock_code(numeric_symbol)
 
+        # 转换复权标志
+        adjust_flag: str = self._convert_adjust_mode(adjust)
+
         try:
-            # 查询历史 K 线数据
-            query_result = bs.query_history_k_data_plus(
+            # 使用 baostock_api 模块获取数据
+            data_frame: Optional[pd.DataFrame] = fetch_stock_data(
                 code=baostock_code,
-                fields=requested_fields,
                 start_date=formatted_start_date,
                 end_date=formatted_end_date,
-                frequency="d",
-                adjustflag=self._convert_adjust_mode(adjust),
+                adjustflag=adjust_flag
             )
 
-            # 检查查询是否成功
-            if query_result.error_code != "0":
-                logger.error(
-                    f"BaoStock 查询失败: {baostock_code}，"
-                    f"错误码: {query_result.error_code}，"
-                    f"错误信息: {query_result.error_msg}"
-                )
+            if data_frame is None or data_frame.empty:
+                logger.warning(f"BaoStock {numeric_symbol} 无数据返回")
                 return pd.DataFrame()
 
-            # 逐行读取查询结果
-            data_rows: list[list[str]] = []
-            while query_result.next():
-                data_rows.append(query_result.get_row_data())
+            # 打印获取结果统计信息
+            record_count: int = len(data_frame)
+            if 'datetime' in data_frame.columns:
+                logger.info(
+                    f"BaoStock {numeric_symbol} 获取 {record_count} 条记录，"
+                    f"时间范围: {data_frame['datetime'].iloc[0].date()} ~ "
+                    f"{data_frame['datetime'].iloc[-1].date()}"
+                )
+
+            return data_frame
 
         except Exception as exception:
             logger.exception(f"BaoStock 查询异常: {baostock_code}，错误: {exception}")
             return pd.DataFrame()
-        finally:
-            # 确保 BaoStock 登出，释放连接资源
-            try:
-                logout_result = bs.logout()
-                if logout_result.error_code != "0":
-                    logger.warning(
-                        f"BaoStock 登出异常: {logout_result.error_msg}"
-                    )
-            except Exception as exception:
-                logger.warning(f"BaoStock 登出失败: {exception}")
-
-        # 处理空结果
-        if not data_rows:
-            logger.warning(f"BaoStock {numeric_symbol} 无数据返回")
-            return pd.DataFrame()
-
-        # 构建 DataFrame 并进行类型转换
-        field_names: list[str] = requested_fields.split(",")
-        result_dataframe: pd.DataFrame = pd.DataFrame(
-            data_rows, columns=field_names
-        )
-
-        # 重命名 date 列为 datetime
-        result_dataframe.rename(columns={"date": "datetime"}, inplace=True)
-
-        # 转换 datetime 列
-        result_dataframe["datetime"] = pd.to_datetime(
-            result_dataframe["datetime"]
-        )
-
-        # 转换数值列
-        for column_name in ["open", "high", "low", "close", "volume", "amount"]:
-            result_dataframe[column_name] = pd.to_numeric(
-                result_dataframe[column_name], errors="coerce"
-            )
-
-        # 按时间排序并重置索引
-        result_dataframe = result_dataframe.sort_values("datetime").reset_index(
-            drop=True
-        )
-
-        # 打印获取结果统计信息
-        record_count: int = len(result_dataframe)
-        logger.info(
-            f"BaoStock {numeric_symbol} 获取 {record_count} 条记录，"
-            f"时间范围: {result_dataframe['datetime'].iloc[0].date()} ~ "
-            f"{result_dataframe['datetime'].iloc[-1].date()}"
-        )
-
-        return result_dataframe
 
     def fetch_spot(self) -> pd.DataFrame:
         """获取全市场当日行情快照。

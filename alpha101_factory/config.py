@@ -36,6 +36,8 @@ import re
 from pathlib import Path
 from typing import Final
 
+from alpha101_factory.utils.validation import is_valid_date_format, is_valid_adjust
+
 # ---------------------------------------------------------------------------
 # 日志配置 — 模块级 logger，用于打印配置解析信息
 # ---------------------------------------------------------------------------
@@ -142,17 +144,24 @@ def _validate_date(value: str, env_name: str, default: str) -> str:
     Returns:
         有效的日期字符串；否则返回默认值。
     """
-    if not _DATE_PATTERN.match(value):
+    if not is_valid_date_format(value):
         _logger.warning(
             "环境变量 %s 值 '%s' 不符合 YYYYMMDD 格式，使用默认值 %s",
             env_name, value, default,
         )
         return default
     # 进一步校验日期合法性（如 20201301 不是有效日期）
-    _, month, day = int(value[:4]), int(value[4:6]), int(value[6:8])
-    if not (1 <= month <= 12 and 1 <= day <= 31):
+    try:
+        year, month, day = int(value[:4]), int(value[4:6]), int(value[6:8])
+        if not (1 <= month <= 12 and 1 <= day <= 31):
+            _logger.warning(
+                "环境变量 %s 值 '%s' 不是有效日期，使用默认值 %s",
+                env_name, value, default,
+            )
+            return default
+    except ValueError:
         _logger.warning(
-            "环境变量 %s 值 '%s' 不是有效日期，使用默认值 %s",
+            "环境变量 %s 值 '%s' 日期解析失败，使用默认值 %s",
             env_name, value, default,
         )
         return default
@@ -174,7 +183,7 @@ def _validate_adjust(value: str) -> str:
     Returns:
         有效的复权方式；否则返回默认值 "qfq" 并记录警告。
     """
-    if value not in _VALID_ADJUST_VALUES:
+    if not is_valid_adjust(value):
         _logger.warning(
             "环境变量 ALPHA101_ADJUST 值 '%s' 无效，允许值: %s，使用默认值 'qfq'",
             value, ", ".join(repr(v) for v in _VALID_ADJUST_VALUES),

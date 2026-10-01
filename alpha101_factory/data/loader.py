@@ -56,6 +56,11 @@ from alpha101_factory.config import (
 from alpha101_factory.utils.io import write_jsonl, read_jsonl
 from alpha101_factory.viz.plots import plot_kline, save_fig
 from alpha101_factory.data.factory import DataSourceFactory
+from alpha101_factory.utils.validation import (
+    is_valid_stock_code,
+    is_valid_adjust,
+    normalize_stock_code
+)
 
 # ---------------------------------------------------------------------------
 # 常量与正则表达式
@@ -83,7 +88,7 @@ def _is_valid_stock_code(code: str) -> bool:
         >>> _is_valid_stock_code("abc")
         False
     """
-    return bool(_STOCK_CODE_PATTERN.match(code))
+    return is_valid_stock_code(code)
 
 
 def _is_valid_adjust(adjust: str) -> bool:
@@ -95,7 +100,7 @@ def _is_valid_adjust(adjust: str) -> bool:
     Returns:
         bool: 为 "qfq"、"hfq" 或空字符串时返回 True，否则返回 False。
     """
-    return adjust in _VALID_ADJUST_VALUES
+    return is_valid_adjust(adjust)
 
 
 def _normalize_stock_code(code: str) -> str:
@@ -116,8 +121,7 @@ def _normalize_stock_code(code: str) -> str:
         >>> _normalize_stock_code("600000")
         '600000'
     """
-    digits_only: str = "".join(filter(str.isdigit, code))
-    return digits_only.zfill(6) if digits_only else ""
+    return normalize_stock_code(code)
 
 
 def kline_path(symbol: str) -> Path:
@@ -220,34 +224,42 @@ def fetch_spot(save: bool = True) -> pd.DataFrame:
 
     # 优先读取本地缓存
     if universe_path.exists():
-        spot_dataframe: pd.DataFrame = read_jsonl(universe_path)
-        if not spot_dataframe.empty:
-            logger.info(f"读取本地股票池快照: {universe_path} ({len(spot_dataframe)} 只股票)")
-            return spot_dataframe
-        logger.warning(f"本地股票池文件为空: {universe_path}")
+        try:
+            spot_dataframe: pd.DataFrame = read_jsonl(universe_path)
+            if not spot_dataframe.empty:
+                logger.info(f"读取本地股票池快照: {universe_path} ({len(spot_dataframe)} 只股票)")
+                return spot_dataframe
+            logger.warning(f"本地股票池文件为空: {universe_path}")
+        except Exception as e:
+            logger.error(f"读取本地股票池文件失败: {e}")
+            # 继续尝试从远程获取
 
     # 从远程数据源获取
-    spot_dataframe = DataSourceFactory.fetch_spot_fallback()
-    if spot_dataframe.empty:
-        logger.error("未能从任何数据源获取市场快照数据")
+    try:
+        spot_dataframe = DataSourceFactory.fetch_spot_fallback()
+        if spot_dataframe.empty:
+            logger.error("未能从任何数据源获取市场快照数据")
+            return pd.DataFrame()
+
+        # 持久化到本地
+        if save:
+            try:
+                write_jsonl(spot_dataframe[["code", "name"]], universe_path)
+                today_tag: str = date.today().strftime("%Y%m%d")
+                spot_dated_path: Path = DIR_SPOT / f"spot_{today_tag}.jsonl"
+                write_jsonl(spot_dataframe[["code", "name"]], spot_dated_path)
+                logger.info(
+                    f"股票池快照已保存: {universe_path}, {spot_dated_path} "
+                    f"(共 {len(spot_dataframe)} 只股票)"
+                )
+            except Exception as e:
+                logger.error(f"保存股票池快照失败: {e}")
+
+        logger.info(f"实时行情共 {len(spot_dataframe)} 行 | 保存={save}")
+        return spot_dataframe
+    except Exception as e:
+        logger.error(f"获取市场快照过程中发生异常: {e}")
         return pd.DataFrame()
-
-    # 持久化到本地
-    if save:
-        try:
-            write_jsonl(spot_dataframe[["code", "name"]], universe_path)
-            today_tag: str = date.today().strftime("%Y%m%d")
-            spot_dated_path: Path = DIR_SPOT / f"spot_{today_tag}.jsonl"
-            write_jsonl(spot_dataframe[["code", "name"]], spot_dated_path)
-            logger.info(
-                f"股票池快照已保存: {universe_path}, {spot_dated_path} "
-                f"(共 {len(spot_dataframe)} 只股票)"
-            )
-        except Exception as exc:
-            logger.error(f"保存股票池快照失败: {exc}")
-
-    logger.info(f"实时行情共 {len(spot_dataframe)} 行 | 保存={save}")
-    return spot_dataframe
 
 
 def fetch_klines_from_spot(spot_dataframe: pd.DataFrame) -> int:
@@ -271,101 +283,121 @@ def fetch_klines_from_spot(spot_dataframe: pd.DataFrame) -> int:
         - 单只股票下载失败时记录警告日志，继续处理下一只。
         - 受 ``LIMIT_STOCKS`` 环境变量限制，可能仅处理部分股票。
     """
+    # 空快照直接返回
+    if spot_dataframe.empty:
+        logger.warning("快照数据为空，跳过 K 线批量下载")
+        return 0
+
+    # 验证必需列是否存在
+    if "code" not in spot_dataframe.columns:
+        logger.error(
+            f"快照数据缺少 'code' 列，可用列: {list(spot_dataframe.columns)}"
+        )
+        return 0
+
     # 提取并规范化股票代码
-    raw_codes: list[str] = (
-        spot_dataframe["code"]
-        .astype(str)
-        .apply(_normalize_stock_code)
-        .unique()
-        .tolist()
-    )
-    # 过滤无效代码
-    valid_codes: list[str] = [c for c in raw_codes if _is_valid_stock_code(c)]
+    try:
+        raw_codes: list[str] = (
+            spot_dataframe["code"]
+            .astype(str)
+            .apply(_normalize_stock_code)
+            .unique()
+            .tolist()
+        )
+        # 过滤无效代码
+        valid_codes: list[str] = [c for c in raw_codes if _is_valid_stock_code(c)]
 
-    if len(raw_codes) != len(valid_codes):
-        invalid_count: int = len(raw_codes) - len(valid_codes)
-        logger.warning(f"过滤掉 {invalid_count} 个无效股票代码")
+        if len(raw_codes) != len(valid_codes):
+            invalid_count: int = len(raw_codes) - len(valid_codes)
+            logger.warning(f"过滤掉 {invalid_count} 个无效股票代码")
 
-    # 应用股票数量限制
-    codes_to_fetch: list[str] = valid_codes
-    if LIMIT_STOCKS and LIMIT_STOCKS > 0:
-        codes_to_fetch = valid_codes[:LIMIT_STOCKS]
-        logger.info(f"受 LIMIT_STOCKS 限制，仅处理前 {LIMIT_STOCKS} 只股票")
+        # 应用股票数量限制
+        codes_to_fetch: list[str] = valid_codes
+        if LIMIT_STOCKS and LIMIT_STOCKS > 0:
+            codes_to_fetch = valid_codes[:LIMIT_STOCKS]
+            logger.info(f"受 LIMIT_STOCKS 限制，仅处理前 {LIMIT_STOCKS} 只股票")
 
-    logger.info(
-        f"准备下载 {len(codes_to_fetch)} 只股票 | "
-        f"adjust={ADJUST} start={START_DATE} end={END_DATE or 'latest'}"
-    )
+        logger.info(
+            f"准备下载 {len(codes_to_fetch)} 只股票 | "
+            f"adjust={ADJUST} start={START_DATE} end={END_DATE or 'latest'}"
+        )
 
-    newly_saved_count: int = 0
-    failed_count: int = 0
+        newly_saved_count: int = 0
+        failed_count: int = 0
 
-    for symbol in tqdm(codes_to_fetch, desc="下载日线"):
-        target_path: Path = kline_path(symbol)
+        for symbol in tqdm(codes_to_fetch, desc="下载日线"):
+            target_path: Path = kline_path(symbol)
 
-        # 本地文件已存在：仅生成 K 线图，不重新下载
-        if target_path.exists():
-            local_dataframe: pd.DataFrame = read_jsonl(target_path)
-            if not local_dataframe.empty:
-                _save_kline_png(
+            # 本地文件已存在：仅生成 K 线图，不重新下载
+            if target_path.exists():
+                try:
+                    local_dataframe: pd.DataFrame = read_jsonl(target_path)
+                    if not local_dataframe.empty:
+                        _save_kline_png(
+                            symbol,
+                            local_dataframe,
+                            START_DATE or "all",
+                            END_DATE or "all",
+                            ADJUST,
+                        )
+                except Exception as e:
+                    logger.warning(f"{symbol} 读取本地文件失败: {e}")
+                continue
+
+            # 从远程数据源下载
+            try:
+                kline_dataframe = DataSourceFactory.fetch_kline_fallback(
                     symbol,
-                    local_dataframe,
-                    START_DATE or "all",
-                    END_DATE or "all",
+                    START_DATE or None,
+                    END_DATE or None,
                     ADJUST,
                 )
-            continue
 
-        # 从远程数据源下载
-        try:
-            kline_dataframe = DataSourceFactory.fetch_kline_fallback(
-                symbol,
-                START_DATE or None,
-                END_DATE or None,
-                ADJUST,
-            )
+                if kline_dataframe is not None and not kline_dataframe.empty:
+                    # 插入 symbol 列
+                    kline_dataframe.insert(0, "symbol", symbol)
+                    write_jsonl(
+                        kline_dataframe,
+                        target_path,
+                        meta={
+                            "symbol": symbol,
+                            "adjust": ADJUST,
+                            "start": START_DATE,
+                            "end": END_DATE,
+                            "rows": len(kline_dataframe),
+                        },
+                    )
+                    _save_kline_png(
+                        symbol,
+                        kline_dataframe,
+                        START_DATE or "all",
+                        END_DATE or "all",
+                        ADJUST,
+                    )
+                    newly_saved_count += 1
+                    logger.debug(f"{symbol} 已保存: {target_path} ({len(kline_dataframe)} 行)")
+                else:
+                    failed_count += 1
+                    logger.warning(f"{symbol} 数据源返回空数据")
 
-            if kline_dataframe is not None and not kline_dataframe.empty:
-                # 插入 symbol 列
-                kline_dataframe.insert(0, "symbol", symbol)
-                write_jsonl(
-                    kline_dataframe,
-                    target_path,
-                    meta={
-                        "symbol": symbol,
-                        "adjust": ADJUST,
-                        "start": START_DATE,
-                        "end": END_DATE,
-                        "rows": len(kline_dataframe),
-                    },
-                )
-                _save_kline_png(
-                    symbol,
-                    kline_dataframe,
-                    START_DATE or "all",
-                    END_DATE or "all",
-                    ADJUST,
-                )
-                newly_saved_count += 1
-                logger.debug(f"{symbol} 已保存: {target_path} ({len(kline_dataframe)} 行)")
-            else:
+            except Exception as exc:
                 failed_count += 1
-                logger.warning(f"{symbol} 数据源返回空数据")
+                logger.warning(f"{symbol} 下载失败: {exc}")
 
-        except Exception as exc:
-            failed_count += 1
-            logger.warning(f"{symbol} 下载失败: {exc}")
+            # 请求节流，避免触发 API 限流
+            time.sleep(REQUEST_PAUSE)
 
-        # 请求节流，避免触发 API 限流
-        time.sleep(REQUEST_PAUSE)
+        # 打印汇总信息
+        logger.info(
+            f"K 线下载完成: 新保存 {newly_saved_count} 个文件, "
+            f"失败/空数据 {failed_count} 个, "
+            f"跳过（已存在）{len(codes_to_fetch) - newly_saved_count - failed_count} 个"
+        )
+        return newly_saved_count
 
-    # 打印汇总信息
-    logger.info(
-        f"K 线下载完成: 新保存 {newly_saved_count} 个文件, "
-        f"失败/空数据 {failed_count} 个, "
-        f"跳过（已存在）{len(codes_to_fetch) - newly_saved_count - failed_count} 个"
-    )
-    return newly_saved_count
+    except Exception as e:
+        logger.error(f"批量下载 K 线数据过程中发生异常: {e}")
+        return 0
 
 
 def check_klines_integrity() -> pd.DataFrame:

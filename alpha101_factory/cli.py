@@ -54,16 +54,15 @@ from alpha101_factory.factors.registry import list_factors
 from alpha101_factory.factors.tmp_features import build_tmp_all
 from alpha101_factory.pipeline.compute_factor import compute_and_save
 from alpha101_factory.utils.log import setup_logger
+from alpha101_factory.utils.validation import (
+    validate_stock_code_arg,
+    validate_date_format,
+    validate_adjust_mode
+)
 
 # ============================================================
 # 常量定义
 # ============================================================
-
-# 股票代码正则：严格匹配 6 位纯数字
-_STOCK_CODE_PATTERN = re.compile(r"^\d{6}$")
-
-# 日期格式正则：YYYYMMDD 或空字符串
-_DATE_PATTERN = re.compile(r"^(\d{8})?$")
 
 # 合法的复权方式集合
 _VALID_ADJUST_MODES = frozenset({"qfq", "hfq", ""})
@@ -86,11 +85,10 @@ def _validate_stock_code(code: str) -> str:
     Raises:
         argparse.ArgumentTypeError: 当代码非 6 位纯数字时抛出。
     """
-    if not _STOCK_CODE_PATTERN.match(code):
-        raise argparse.ArgumentTypeError(
-            f"无效的股票代码 '{code}'，必须为 6 位纯数字（如 600000）"
-        )
-    return code
+    # 空字符串表示未指定股票，直接返回
+    if not code:
+        return code
+    return validate_stock_code_arg(code)
 
 
 def _validate_date(value: str) -> str:
@@ -107,11 +105,9 @@ def _validate_date(value: str) -> str:
     Raises:
         argparse.ArgumentTypeError: 当格式不匹配时抛出。
     """
-    if not _DATE_PATTERN.match(value):
-        raise argparse.ArgumentTypeError(
-            f"无效的日期格式 '{value}'，必须为 YYYYMMDD 或留空"
-        )
-    return value
+    if not value:
+        return value
+    return validate_date_format(value)
 
 
 def _validate_adjust(value: str) -> str:
@@ -126,11 +122,9 @@ def _validate_adjust(value: str) -> str:
     Raises:
         argparse.ArgumentTypeError: 当值不在合法集合中时抛出。
     """
-    if value not in _VALID_ADJUST_MODES:
-        raise argparse.ArgumentTypeError(
-            f"无效的复权方式 '{value}'，可选值: qfq（前复权）/ hfq（后复权）/ ''（不复权）"
-        )
-    return value
+    if not value:
+        return value
+    return validate_adjust_mode(value)
 
 
 # ============================================================

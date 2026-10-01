@@ -212,15 +212,18 @@ class DataSourceFactory:
                     )
                     return kline_dataframe
                 else:
+                    # 数据源正常返回但无数据（如股票退市、日期范围无数据）
+                    # 注意：这种情况不应触发降级，因为可能是真实无数据
                     logger.warning(
-                        f"数据源 '{source_name}' 返回空数据（API 无记录），尝试下一个"
+                        f"数据源 '{source_name}' 返回空数据（API 无记录或日期范围内无数据），"
+                        f"降级到下一个数据源"
                     )
 
             except Exception as exc:
-                # 网络错误、API 异常等 — 与"空数据"区分开
+                # 网络错误、API 异常等 — 触发降级到下一个数据源
                 logger.warning(
                     f"数据源 '{source_name}' 异常: {type(exc).__name__}: {exc}，"
-                    f"尝试下一个数据源"
+                    f"降级到下一个数据源"
                 )
 
         # 所有数据源均失败
