@@ -20,6 +20,51 @@ from typing import Optional, Dict, Any
 import baostock as bs
 import pandas as pd
 from loguru import logger
+from contextlib import contextmanager
+
+# 全局连接状态
+_bs_connected = False
+
+
+def _ensure_connected() -> bool:
+    """确保 Baostock 已连接。"""
+    global _bs_connected
+    if not _bs_connected:
+        try:
+            lg = bs.login()
+            if lg.error_code != "0":
+                logger.warning(f"Baostock 登录失败: {lg.error_msg}")
+                return False
+            _bs_connected = True
+        except Exception as e:
+            logger.error(f"Baostock 连接异常: {e}")
+            return False
+    return True
+
+
+def disconnect():
+    """断开 Baostock 连接。"""
+    global _bs_connected
+    try:
+        bs.logout()
+    except Exception:
+        pass
+    _bs_connected = False
+
+
+@contextmanager
+def bs_connection():
+    """Baostock 连接上下文管理器。
+
+    Usage:
+        with bs_connection():
+            df = fetch_kline_bs_without_login(...)
+    """
+    connected = _ensure_connected()
+    try:
+        yield connected
+    finally:
+        disconnect()
 
 # 全局登录锁，防止多线程并发登录
 _login_lock = threading.Lock()

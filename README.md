@@ -395,7 +395,7 @@ register_chart(CustomChart)
 ALPHA101_START=20190101 python -m alpha101_factory.cli fetch
 ```
 
-## 扩展指南
+## 🧬 Factor System
 
 ### 新增数据源
 
@@ -404,7 +404,7 @@ ALPHA101_START=20190101 python -m alpha101_factory.cli fetch
 3. 返回规范化的 DataFrame（列：`datetime, open, high, low, close, volume, amount, symbol`）
 4. 通过 `DataSourceFactory.register()` 注册
 
-### 自定义股票池
+### Factor Categories
 
 修改 `data/universe.py`，实现从指数成分、CSV 或白名单加载股票列表。
 
