@@ -307,3 +307,25 @@ def _format_file_size(size_bytes: int) -> str:
         size_float /= 1024
 
     return f"{size_float:.2f} {units[-1]}"
+
+
+def read_parquet(path: Path) -> pd.DataFrame:
+    """安全读取 Parquet 文件；文件不存在或读取失败时返回空 DataFrame。"""
+    if not path.exists():
+        logger.warning(f"文件不存在: {path}")
+        return pd.DataFrame()
+    try:
+        return pd.read_parquet(path)
+    except Exception as e:  # pragma: no cover - defensive
+        logger.error(f"读取 Parquet 文件失败: {path}, 错误: {e}")
+        return pd.DataFrame()
+
+
+def write_parquet(df: pd.DataFrame, path: Path) -> None:
+    """安全写入 DataFrame 至 Parquet 文件，自动创建父目录。"""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(path, index=False)
+        logger.info(f"成功写入 Parquet 文件: {path}")
+    except Exception as e:  # pragma: no cover - defensive
+        logger.error(f"写入 Parquet 文件失败: {path}, 错误: {e}")

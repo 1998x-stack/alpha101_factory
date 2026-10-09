@@ -245,6 +245,8 @@ DIR_SPOT: Final[Path] = DATA_ROOT / "quotes" / "spot"
 DIR_FEATURES: Final[Path] = DATA_ROOT / "features"
 # 因子输出目录
 DIR_FACTORS: Final[Path] = DATA_ROOT / "factors"
+# 向后兼容别名（历史名称）
+PARQ_DIR_FACT: Final[Path] = DIR_FACTORS
 # 回测结果目录
 DIR_BACKTEST: Final[Path] = DATA_ROOT / "backtest"
 # 日志目录
@@ -257,12 +259,18 @@ IMG_DIR: Final[Path] = DATA_ROOT / "images"
 IMG_KLINES_DIR: Final[Path] = IMG_DIR / "klines"
 # 回测图表目录
 IMG_BT_DIR: Final[Path] = IMG_DIR / "backtest"
+# 因子可视化目录
+IMG_FACTORS_DIR: Final[Path] = IMG_DIR / "factors"
+IMG_FACTORS_TS_DIR: Final[Path] = IMG_FACTORS_DIR / "timeseries"
+IMG_FACTORS_CS_DIR: Final[Path] = IMG_FACTORS_DIR / "cross_section"
+IMG_FACTORS_HEATMAP_DIR: Final[Path] = IMG_FACTORS_DIR / "heatmap"
 
 # 创建所有数据目录
 for _dir in [
     DIR_UNIVERSE, DIR_QUOTES, DIR_SPOT, DIR_FEATURES,
     DIR_FACTORS, DIR_BACKTEST, LOG_DIR,
     IMG_DIR, IMG_KLINES_DIR, IMG_BT_DIR,
+    IMG_FACTORS_DIR, IMG_FACTORS_TS_DIR, IMG_FACTORS_CS_DIR, IMG_FACTORS_HEATMAP_DIR,
 ]:
     _dir.mkdir(parents=True, exist_ok=True)
 
