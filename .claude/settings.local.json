@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python *)",
+      "Bash(./test.sh *)",
+      "Bash(chmod +x *)",
+      "Bash(./test_improved.sh *)",
+      "Bash(bash *)"
+    ]
+  }
+}
